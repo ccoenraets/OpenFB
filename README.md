@@ -49,7 +49,7 @@ You can try the sample app here http://coenraets.org/apps/openfb/index.html (The
 ### Getting Started ###
 To run the sample on your own system:
 
-1. Create a Facebook app here: href="https://developers.facebook.com/apps">https://developers.facebook.com/apps. In the advanced settings, make sure you declare a "Valid OAuth redirect URI". For example, if during development you access your application from http://localhost/openfb/index.html, you must declare http://localhost/openfb/oauthcallback.html as a valid redirect URI.</p>
+1. Create a Facebook app here: https://developers.facebook.com/apps">https://developers.facebook.com/apps. In the advanced settings, make sure you declare a "Valid OAuth redirect URI". For example, if during development you access your application from http://localhost/openfb/index.html, you must declare http://localhost/openfb/oauthcallback.html as a valid redirect URI.</p>
 2. Copy the Facebook App Id and paste it as the first argument of the openFB.init() method invocation in index.html.
 3. Load index.html, from a location that matches the redirect URI you defined above. For example: http://localhost/openfb/index.html
 
