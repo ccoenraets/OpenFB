@@ -1,0 +1,14 @@
+textarea {
+    margin-bottom: 0px !important;
+}
+
+body {
+    padding: 20px;
+}
+
+hr {
+    margin: 20px 0;
+    border: 0;
+    border-bottom: 1px solid #eee;
+    background: #999;
+}
