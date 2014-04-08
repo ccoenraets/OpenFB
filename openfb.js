@@ -11,16 +11,21 @@ var openFB = (function() {
 
     var FB_LOGIN_URL = 'https://www.facebook.com/dialog/oauth',
 
-        // By default we store fbtoken in sessionStorage. This can be overriden in init()
+    // By default we store fbtoken in sessionStorage. This can be overriden in init()
         tokenStore = window.sessionStorage,
 
         fbAppId,
         oauthRedirectURL,
 
-        // Because the OAuth login spawns multiple processes, we need to keep the success/error handlers as variables
-        // inside the module as opposed to keeping them local within the function.
+    // Because the OAuth login spawns multiple processes, we need to keep the success/error handlers as variables
+    // inside the module as opposed to keeping them local within the function.
         loginSuccessHandler,
-        loginErrorHandler;
+        loginErrorHandler,
+        runningInCordova;
+
+    document.addEventListener("deviceready", function() {
+        runningInCordova = true;
+    }, false);
 
     /**
      * Initialize the OpenFB module. You must use this function and initialize the module with an appId before you can
@@ -58,7 +63,7 @@ var openFB = (function() {
         loginErrorHandler = error;
 
         if (!oauthRedirectURL) {
-            if (runningInCordova()) {
+            if (runningInCordova) {
                 oauthRedirectURL = 'https://www.facebook.com/connect/login_success.html';
             } else {
                 // Trying to calculate oauthRedirectURL based on the current URL.
@@ -75,7 +80,7 @@ var openFB = (function() {
             '&response_type=token&display=popup&scope=' + scope, '_blank', 'location=no');
 
         // If the app is running in Cordova, listen to URL changes in the InAppBrowser until we get a URL with an access_token
-        if (runningInCordova()) {
+        if (runningInCordova) {
             loginWindow.addEventListener('loadstart', function (event) {
                 var url = event.url;
                 if (url.indexOf("access_token=") > 0) {
@@ -157,7 +162,7 @@ var openFB = (function() {
                     if (obj.error) obj.error(error);
                 }
             }
-        }
+        };
 
         xhr.open(method, url, true);
         xhr.send();
@@ -187,10 +192,6 @@ var openFB = (function() {
             }
         }
         return parts.join("&");
-    }
-
-    function runningInCordova() {
-        return window.device && window.device.cordova;
     }
 
     // The public API

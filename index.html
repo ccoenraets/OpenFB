@@ -22,6 +22,7 @@
 
 <button class="btn btn-block" onclick="revoke()">Revoke Permissions</button>
 
+<script src="cordova.js"></script>
 <script src="openfb.js"></script>
 
 <script>
@@ -58,7 +59,7 @@
             params: {
                 message: 'Testing Facebook APIs'
             },
-            success: function(data) {
+            success: function() {
                 alert('the item was posted on Facebook');
             },
             error: errorHandler});
