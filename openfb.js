@@ -5,23 +5,28 @@
  * Cordova, you also don't need the Facebook Cordova plugin. There is also no dependency on jQuery.
  * OpenFB allows you to login to Facebook and execute any Facebook Graph API request.
  * @author Christophe Coenraets @ccoenraets
- * @version 0.1
+ * @version 0.2
  */
 var openFB = (function() {
 
     var FB_LOGIN_URL = 'https://www.facebook.com/dialog/oauth',
 
-    // By default we store fbtoken in sessionStorage. This can be overriden in init()
+        // By default we store fbtoken in sessionStorage. This can be overriden in init()
         tokenStore = window.sessionStorage,
 
         fbAppId,
         oauthRedirectURL,
 
-    // Because the OAuth login spawns multiple processes, we need to keep the success/error handlers as variables
-    // inside the module as opposed to keeping them local within the function.
+        // Because the OAuth login spans multiple processes, we need to keep the success/error handlers as variables
+        // inside the module instead of keeping them local within the login function.
         loginSuccessHandler,
         loginErrorHandler,
-        runningInCordova;
+
+        // Indicates if the app is running inside Cordova
+        runningInCordova,
+
+        // Used in the exit event handler to identify if the login has already been processed elsewhere (in the oauthCallback function)
+        loginProcessed;
 
     document.addEventListener("deviceready", function() {
         runningInCordova = true;
@@ -62,6 +67,10 @@ var openFB = (function() {
         loginSuccessHandler = success;
         loginErrorHandler = error;
 
+        loginProcessed = false;
+        logout();
+
+        // Check if an explicit oauthRedirectURL has been provided in init(). If not, infer the appropriate value
         if (!oauthRedirectURL) {
             if (runningInCordova) {
                 oauthRedirectURL = 'https://www.facebook.com/connect/login_success.html';
@@ -71,7 +80,7 @@ var openFB = (function() {
                 if (index > 0) {
                     oauthRedirectURL = window.document.location.href.substring(0, index) + 'oauthcallback.html';
                 } else {
-                    return alert("Can't reliably guess the OAuth redirect URI. Please specify it explicitly in openFB.init()");
+                    return alert("Can't reliably infer the OAuth redirect URI. Please specify it explicitly in openFB.init()");
                 }
             }
         }
@@ -79,21 +88,20 @@ var openFB = (function() {
         loginWindow = window.open(FB_LOGIN_URL + '?client_id=' + fbAppId + '&redirect_uri=' + oauthRedirectURL +
             '&response_type=token&display=popup&scope=' + scope, '_blank', 'location=no');
 
-        // If the app is running in Cordova, listen to URL changes in the InAppBrowser until we get a URL with an access_token
+        // If the app is running in Cordova, listen to URL changes in the InAppBrowser until we get a URL with an access_token or an error
         if (runningInCordova) {
             loginWindow.addEventListener('loadstart', function (event) {
                 var url = event.url;
-                if (url.indexOf("access_token=") > 0) {
+                if (url.indexOf("access_token=") > 0 || url.indexOf("error=") > 0) {
                     loginWindow.close();
                     oauthCallback(url);
                 }
             });
 
-            loginWindow.addEventListener('exit', function (event) {
+            loginWindow.addEventListener('exit', function () {
                 // Handle the situation where the user closes the login window manually before completing the login process
-                var url = event.url;
-                if (url.indexOf("access_token=") > 0) {
-                    deferredLogin.reject();
+                if (!loginProcessed) {
+                    loginErrorHandler({error: 'user_cancelled', error_description: 'User cancelled login process', error_reason: "user_cancelled"});
                 }
             });
         }
@@ -110,17 +118,19 @@ var openFB = (function() {
      */
     function oauthCallback(url) {
         // Parse the OAuth data received from Facebook
-        var hash = decodeURIComponent(url.substr(url.indexOf('#') + 1)),
-            params = hash.split('&'),
-            oauthData = {};
-        params.forEach(function (param) {
-            var splitter = param.split('=');
-            oauthData[splitter[0]] = splitter[1];
-        });
-        var fbtoken = oauthData['access_token'];
-        if (fbtoken) {
-            tokenStore['fbtoken'] = fbtoken;
+        var queryString,
+            obj;
+
+        loginProcessed = true;
+        if (url.indexOf("access_token=") > 0) {
+            queryString = url.substr(url.indexOf('#') + 1);
+            obj = parseQueryString(queryString);
+            tokenStore['fbtoken'] = obj['access_token'];
             if (loginSuccessHandler) loginSuccessHandler();
+        } else if (url.indexOf("error=") > 0) {
+            queryString = url.substring(url.indexOf('?') + 1, url.indexOf('#'));
+            obj = parseQueryString(queryString);
+            if (loginErrorHandler) loginErrorHandler(obj);
         } else {
             if (loginErrorHandler) loginErrorHandler();
         }
@@ -182,6 +192,17 @@ var openFB = (function() {
                 success();
             },
             error: error});
+    }
+
+    function parseQueryString(queryString) {
+        var qs = decodeURIComponent(queryString),
+            obj = {},
+            params = qs.split('&');
+        params.forEach(function (param) {
+            var splitter = param.split('=');
+            obj[splitter[0]] = splitter[1];
+        });
+        return obj;
     }
 
     function toQueryString(obj) {

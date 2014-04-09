@@ -37,8 +37,8 @@
                 function() {
                     alert('Facebook login succeeded');
                 },
-                function() {
-                    alert('Facebook login failed');
+                function(error) {
+                    alert('Facebook login failed: ' + error.error_description);
                 });
     }
 
