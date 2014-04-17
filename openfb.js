@@ -40,32 +40,66 @@ var openFB = (function() {
      * @param store - The store used to save the Facebook token. Optional. If not provided, we use sessionStorage.
      */
     function init(appId, redirectURL, store) {
-        fbAppId = appId;
+        
+        // handle facebook parameter style
+        if(typeof appId == 'object') {
+            fbAppId = appId.appId;    
+        } else {
+            fbAppId = appId;
+        }
+        
         if (redirectURL) oauthRedirectURL = redirectURL;
         if (store) tokenStore = store;
+    }
+
+    /**
+     * Converts the facebook response so it is in the same format as facebook returns.
+     * @param token
+     * @returns object
+     */
+    function getFacebookResponse(token) {
+        var facebookResponse = {status: 'unknown'};
+        if(token) {
+            facebookResponse.status = 'connected';
+            facebookResponse.authResponse = {token: token};
+        }
+
+        return facebookResponse; 
+    }
+
+    /**
+     * Checks if the user has logged in with openFB and currently has a session api token.
+     * @param callback the function that receives the loginstatus
+     */
+    function getLoginStatus(callback) {
+        return getFacebookResponse(tokenStore['fbtoken']);
     }
 
     /**
      * Login to Facebook using OAuth. If running in a Browser, the OAuth workflow happens in a a popup window.
      * If running in Cordova container, it happens using the In-App Browser. Don't forget to install the In-App Browser
      * plugin in your Cordova project: cordova plugins add org.apache.cordova.inappbrowser.
-     * @param scope - The set of Facebook permissions requested
-     * @param success - Callback function to invoke when the login process succeeds
-     * @param error - Callback function to invoke when the login process fails
+     * 
+     * @param callback - Callback function to invoke when the login process succeeds
+     * @param options - options.scope: The set of Facebook permissions requested
      * @returns {*}
      */
-    function login(scope, success, error) {
+    function login(callback, scope) {
 
         if (!fbAppId) {
-            return error({error: 'Facebook App Id not set.'});
+            return callback({error: 'Facebook App Id not set.'});
         }
 
         var loginWindow;
 
         scope = scope || '';
+        // handle facebook parameter style
+        if(typeof scope == 'object') {
+            scope = scope.scope;
+        }
 
-        loginSuccessHandler = success;
-        loginErrorHandler = error;
+        loginSuccessHandler = callback;
+        loginErrorHandler = callback;
 
         loginProcessed = false;
         logout();
@@ -126,7 +160,7 @@ var openFB = (function() {
             queryString = url.substr(url.indexOf('#') + 1);
             obj = parseQueryString(queryString);
             tokenStore['fbtoken'] = obj['access_token'];
-            if (loginSuccessHandler) loginSuccessHandler();
+            if (loginSuccessHandler) loginSuccessHandler(getFacebookResponse(obj['access_token']));
         } else if (url.indexOf("error=") > 0) {
             queryString = url.substring(url.indexOf('?') + 1, url.indexOf('#'));
             obj = parseQueryString(queryString);
@@ -139,8 +173,11 @@ var openFB = (function() {
     /**
      * Application-level logout: we simply discard the token.
      */
-    function logout() {
+    function logout(callback) {
         tokenStore['fbtoken'] = undefined;
+        if(callback) {
+            callback();
+        };
     }
 
     /**
@@ -222,7 +259,8 @@ var openFB = (function() {
         logout: logout,
         revokePermissions: revokePermissions,
         api: api,
-        oauthCallback: oauthCallback
+        oauthCallback: oauthCallback,
+        getLoginStatus: getLoginStatus
     }
 
 }());
