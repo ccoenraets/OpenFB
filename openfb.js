@@ -7,12 +7,12 @@
  * @author Christophe Coenraets @ccoenraets
  * @version 0.2
  */
-var openFB = (function() {
+;(function(win) {
 
     var FB_LOGIN_URL = 'https://www.facebook.com/dialog/oauth',
 
         // By default we store fbtoken in sessionStorage. This can be overriden in init()
-        tokenStore = window.sessionStorage,
+        tokenStore = win.sessionStorage,
 
         fbAppId,
         oauthRedirectURL,
@@ -78,14 +78,14 @@ var openFB = (function() {
                 // Trying to calculate oauthRedirectURL based on the current URL.
                 var index = document.location.href.indexOf('index.html');
                 if (index > 0) {
-                    oauthRedirectURL = window.document.location.href.substring(0, index) + 'oauthcallback.html';
+                    oauthRedirectURL = win.document.location.href.substring(0, index) + 'oauthcallback.html';
                 } else {
                     return alert("Can't reliably infer the OAuth redirect URI. Please specify it explicitly in openFB.init()");
                 }
             }
         }
 
-        loginWindow = window.open(FB_LOGIN_URL + '?client_id=' + fbAppId + '&redirect_uri=' + oauthRedirectURL +
+        loginWindow = win.open(FB_LOGIN_URL + '?client_id=' + fbAppId + '&redirect_uri=' + oauthRedirectURL +
             '&response_type=token&display=popup&scope=' + scope, '_blank', 'location=no');
 
         // If the app is running in Cordova, listen to URL changes in the InAppBrowser until we get a URL with an access_token or an error
@@ -216,7 +216,7 @@ var openFB = (function() {
     }
 
     // The public API
-    return {
+    var openFB = {
         init: init,
         login: login,
         logout: logout,
@@ -225,4 +225,8 @@ var openFB = (function() {
         oauthCallback: oauthCallback
     }
 
-}());
+    if (typeof module != 'undefined' && module.exports) { module.exports = openFB }
+    else if (typeof define === 'function' && define.amd) { define(openFB) }
+    else { win.openFB = openFB }
+
+})(this.window || global);
