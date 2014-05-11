@@ -7,28 +7,28 @@
  * @author Christophe Coenraets @ccoenraets
  * @version 0.3
  */
-var openFB = (function() {
+var openFB = (function () {
 
     var FB_LOGIN_URL = 'https://www.facebook.com/dialog/oauth',
 
-        // By default we store fbtoken in sessionStorage. This can be overridden in init()
+    // By default we store fbtoken in sessionStorage. This can be overridden in init()
         tokenStore = window.sessionStorage,
 
         fbAppId,
         oauthRedirectURL,
 
-        // Because the OAuth login spans multiple processes, we need to keep the success/error handlers as variables
-        // inside the module instead of keeping them local within the login function.
+    // Because the OAuth login spans multiple processes, we need to keep the success/error handlers as variables
+    // inside the module instead of keeping them local within the login function.
         loginSuccessHandler,
         loginErrorHandler,
 
-        // Indicates if the app is running inside Cordova
+    // Indicates if the app is running inside Cordova
         runningInCordova,
 
-        // Used in the exit event handler to identify if the login has already been processed elsewhere (in the oauthCallback function)
+    // Used in the exit event handler to identify if the login has already been processed elsewhere (in the oauthCallback function)
         loginProcessed;
 
-    document.addEventListener("deviceready", function() {
+    document.addEventListener("deviceready", function () {
         runningInCordova = true;
     }, false);
 
@@ -65,9 +65,9 @@ var openFB = (function() {
                 // When we get the access token fast, the login window (inappbrowser) is still opening with animation
                 // in the Cordova app, and trying to close it while it's animating generates an exception. Wait a little...
                 var timeout = 600 - (new Date().getTime() - startTime);
-                setTimeout(function() {
+                setTimeout(function () {
                     loginWindow.close();
-                }, timeout>0 ? timeout : 0);
+                }, timeout > 0 ? timeout : 0);
                 oauthCallback(url);
             }
         }
@@ -100,13 +100,9 @@ var openFB = (function() {
             if (runningInCordova) {
                 oauthRedirectURL = 'https://www.facebook.com/connect/login_success.html';
             } else {
-                // Trying to calculate oauthRedirectURL based on the current URL.
-                var index = document.location.href.indexOf('index.html');
-                if (index > 0) {
-                    oauthRedirectURL = window.document.location.href.substring(0, index) + 'oauthcallback.html';
-                } else {
-                    return alert("Can't reliably infer the OAuth redirect URI. Please specify it explicitly in openFB.init()");
-                }
+                var origin = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '');
+                // could also use 'var origin = window.location.origin' when enough browsers support it
+                oauthRedirectURL = origin + '/oauthcallback.html';
             }
         }
 
@@ -177,7 +173,7 @@ var openFB = (function() {
 
         url = 'https://graph.facebook.com' + obj.path + '?' + toQueryString(params);
 
-        xhr.onreadystatechange = function() {
+        xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
                     if (obj.success) obj.success(JSON.parse(xhr.responseText));
@@ -200,8 +196,8 @@ var openFB = (function() {
      */
     function revokePermissions(success, error) {
         return api({method: 'DELETE',
-            path:'/me/permissions',
-            success: function() {
+            path: '/me/permissions',
+            success: function () {
                 tokenStore['fbtoken'] = undefined;
                 success();
             },
