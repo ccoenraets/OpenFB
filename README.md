@@ -54,5 +54,15 @@ To run the sample on your own system:
 3. Load index.html, from a location that matches the redirect URI you defined above. For example: http://localhost/openfb/index.html
 
 
+### Cordova Instructions ###
+
+To use OpenFB with Cordova, you need to install the inappbrowser plugin:
+
+```
+cordova plugins add org.apache.cordova.inappbrowser
+```
+
+### Summary ###
+
 The Facebook Plugin is still the best technical solution to integrate your Cordova app with Facebook because it provides a tighter integration (using native dialogs, etc). However, if you are looking for a lightweight and easy-to-set-up solution with no dependencies, or if you are targeting mobile platforms for which an implementation of the plugin is not available, you may find this library useful as well.
 

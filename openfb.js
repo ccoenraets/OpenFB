@@ -5,7 +5,7 @@
  * Cordova, you also don't need the Facebook Cordova plugin. There is also no dependency on jQuery.
  * OpenFB allows you to login to Facebook and execute any Facebook Graph API request.
  * @author Christophe Coenraets @ccoenraets
- * @version 0.2
+ * @version 0.3
  */
 var openFB = (function() {
 
@@ -56,11 +56,36 @@ var openFB = (function() {
      */
     function login(scope, success, error) {
 
+        var loginWindow,
+            startTime;
+
+        function loginWindowLoadStart(event) {
+            var url = event.url;
+            if (url.indexOf("access_token=") > 0 || url.indexOf("error=") > 0) {
+                // When we get the access token fast, the login window (inappbrowser) is still opening with animation
+                // in the Cordova app, and trying to close it while it's animating generates an exception. Wait a little...
+                var timeout = 600 - (new Date().getTime() - startTime);
+                setTimeout(function() {
+                    loginWindow.close();
+                }, timeout>0 ? timeout : 0);
+                oauthCallback(url);
+            }
+        }
+
+        function loginWindowExit() {
+            console.log('exit and remove listeners');
+            // Handle the situation where the user closes the login window manually before completing the login process
+            deferredLogin.reject({error: 'user_cancelled', error_description: 'User cancelled login process', error_reason: "user_cancelled"});
+            loginWindow.removeEventListener('loadstop', loginWindowLoadStart);
+            loginWindow.removeEventListener('exit', loginWindowExit);
+            loginWindow = null;
+            console.log('done removing listeners');
+        }
+
+
         if (!fbAppId) {
             return error({error: 'Facebook App Id not set.'});
         }
-
-        var loginWindow;
 
         scope = scope || '';
 
@@ -85,25 +110,14 @@ var openFB = (function() {
             }
         }
 
+        startTime = new Date().getTime();
         loginWindow = window.open(FB_LOGIN_URL + '?client_id=' + fbAppId + '&redirect_uri=' + oauthRedirectURL +
             '&response_type=token&display=popup&scope=' + scope, '_blank', 'location=no');
 
         // If the app is running in Cordova, listen to URL changes in the InAppBrowser until we get a URL with an access_token or an error
         if (runningInCordova) {
-            loginWindow.addEventListener('loadstart', function (event) {
-                var url = event.url;
-                if (url.indexOf("access_token=") > 0 || url.indexOf("error=") > 0) {
-                    loginWindow.close();
-                    oauthCallback(url);
-                }
-            });
-
-            loginWindow.addEventListener('exit', function () {
-                // Handle the situation where the user closes the login window manually before completing the login process
-                if (!loginProcessed) {
-                    loginErrorHandler({error: 'user_cancelled', error_description: 'User cancelled login process', error_reason: "user_cancelled"});
-                }
-            });
+            loginWindow.addEventListener('loadstart', loginWindowLoadStart);
+            loginWindow.addEventListener('exit', loginWindowExit);
         }
         // Note: if the app is running in the browser the loginWindow dialog will call back by invoking the
         // oauthCallback() function. See oauthcallback.html for details.
