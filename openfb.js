@@ -11,7 +11,7 @@ var openFB = (function() {
 
     var FB_LOGIN_URL = 'https://www.facebook.com/dialog/oauth',
 
-        // By default we store fbtoken in sessionStorage. This can be overriden in init()
+        // By default we store fbtoken in sessionStorage. This can be overridden in init()
         tokenStore = window.sessionStorage,
 
         fbAppId,
