@@ -17,10 +17,9 @@ var openFB = (function () {
         fbAppId,
         oauthRedirectURL,
 
-    // Because the OAuth login spans multiple processes, we need to keep the success/error handlers as variables
-    // inside the module instead of keeping them local within the login function.
-        loginSuccessHandler,
-        loginErrorHandler,
+    // Because the OAuth login spans multiple processes, we need to keep the login callback as variable
+    // inside the module instead of keeping it local within the login function.
+        loginCallback,
 
     // Indicates if the app is running inside Cordova
         runningInCordova,
@@ -40,24 +39,62 @@ var openFB = (function () {
      * @param store - The store used to save the Facebook token. Optional. If not provided, we use sessionStorage.
      */
     function init(appId, redirectURL, store) {
-        fbAppId = appId;
+        
+        // handle facebook parameter style
+        if(typeof appId == 'object') {
+            fbAppId = appId.appId;    
+        } else {
+            fbAppId = appId;
+        }
+        
         if (redirectURL) oauthRedirectURL = redirectURL;
         if (store) tokenStore = store;
+    }
+
+    /**
+     * Converts the facebook response so it is in the same format as facebook returns.
+     * @param token
+     * @returns object
+     */
+    function getFacebookResponse(token) {
+        var facebookResponse = {status: 'unknown'};
+        if(token) {
+            facebookResponse.status = 'connected';
+            facebookResponse.authResponse = {token: token};
+        }
+
+        return facebookResponse; 
+    }
+
+    /**
+     * Checks if the user has logged in with openFB and currently has a session api token.
+     * @param callback the function that receives the loginstatus
+     */
+    function getLoginStatus(callback) {
+        var status = getFacebookResponse(tokenStore['fbtoken']);
+
+        setTimeout(function(){
+          callback(status);
+        });
+        
+        return status;
     }
 
     /**
      * Login to Facebook using OAuth. If running in a Browser, the OAuth workflow happens in a a popup window.
      * If running in Cordova container, it happens using the In-App Browser. Don't forget to install the In-App Browser
      * plugin in your Cordova project: cordova plugins add org.apache.cordova.inappbrowser.
-     * @param scope - The set of Facebook permissions requested
-     * @param success - Callback function to invoke when the login process succeeds
-     * @param error - Callback function to invoke when the login process fails
+     * 
+     * @param callback - Callback function to invoke when the login process succeeds
+     * @param options - options.scope: The set of Facebook permissions requested
      * @returns {*}
      */
-    function login(scope, success, error) {
+    function login(callback, scope) {
 
         var loginWindow,
             startTime;
+            
+        loginCallback = callback;
 
         function loginWindowLoadStart(event) {
             var url = event.url;
@@ -67,30 +104,35 @@ var openFB = (function () {
                 var timeout = 600 - (new Date().getTime() - startTime);
                 setTimeout(function () {
                     loginWindow.close();
+                    loginWindow = null;
                 }, timeout > 0 ? timeout : 0);
                 oauthCallback(url);
             }
         }
 
         function loginWindowExit() {
-            console.log('exit and remove listeners');
             // Handle the situation where the user closes the login window manually before completing the login process
-            deferredLogin.reject({error: 'user_cancelled', error_description: 'User cancelled login process', error_reason: "user_cancelled"});
+            loginCallback({
+                error: 'user_cancelled', 
+                error_description: 'User cancelled login process', 
+                error_reason: "user_cancelled"
+              });
+
             loginWindow.removeEventListener('loadstop', loginWindowLoadStart);
             loginWindow.removeEventListener('exit', loginWindowExit);
             loginWindow = null;
-            console.log('done removing listeners');
         }
 
 
         if (!fbAppId) {
-            return error({error: 'Facebook App Id not set.'});
+            return loginCallback({error: 'Facebook App Id not set.'});
         }
 
         scope = scope || '';
-
-        loginSuccessHandler = success;
-        loginErrorHandler = error;
+        // handle facebook parameter style
+        if(typeof scope == 'object') {
+            scope = scope.scope;
+        }
 
         loginProcessed = false;
         logout();
@@ -114,9 +156,28 @@ var openFB = (function () {
         if (runningInCordova) {
             loginWindow.addEventListener('loadstart', loginWindowLoadStart);
             loginWindow.addEventListener('exit', loginWindowExit);
+        } else {
+          // Note: if the app is running in the browser,
+          // the loginWindow dialog will call back by invoking the
+          // oauthCallback() function. See oauthcallback.html for details.
+
+          // However, let's check in the meantime if the user has closed the window
+          // before the login process has ended - if yes, reject the whole process.
+          checkIfWindowIsClosedInterval = window.setInterval(function() {
+              if (!loginProcessed && loginWindow && loginWindow.closed) {
+                  loginCallback({
+                      error: 'user_cancelled', 
+                      error_description: 'User cancelled login process', 
+                      error_reason: "user_cancelled"
+                  });
+                  loginWindow = null;
+              }
+
+              if (!loginWindow || loginProcessed) {
+                  window.clearInterval(checkIfWindowIsClosedInterval);
+              }
+          }, 50);
         }
-        // Note: if the app is running in the browser the loginWindow dialog will call back by invoking the
-        // oauthCallback() function. See oauthcallback.html for details.
 
     }
 
@@ -136,21 +197,24 @@ var openFB = (function () {
             queryString = url.substr(url.indexOf('#') + 1);
             obj = parseQueryString(queryString);
             tokenStore['fbtoken'] = obj['access_token'];
-            if (loginSuccessHandler) loginSuccessHandler();
+            if (loginCallback) loginCallback(getFacebookResponse(obj['access_token']));
         } else if (url.indexOf("error=") > 0) {
             queryString = url.substring(url.indexOf('?') + 1, url.indexOf('#'));
             obj = parseQueryString(queryString);
-            if (loginErrorHandler) loginErrorHandler(obj);
+            if (loginCallback) loginCallback(obj);
         } else {
-            if (loginErrorHandler) loginErrorHandler();
+            if (loginCallback) loginCallback();
         }
     }
 
     /**
      * Application-level logout: we simply discard the token.
      */
-    function logout() {
+    function logout(callback) {
         tokenStore['fbtoken'] = undefined;
+        if(callback) {
+            callback();
+        };
     }
 
     /**
@@ -232,7 +296,8 @@ var openFB = (function () {
         logout: logout,
         revokePermissions: revokePermissions,
         api: api,
-        oauthCallback: oauthCallback
+        oauthCallback: oauthCallback,
+        getLoginStatus: getLoginStatus
     }
 
 }());
