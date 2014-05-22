@@ -5,7 +5,7 @@
  * Cordova, you also don't need the Facebook Cordova plugin. There is also no dependency on jQuery.
  * OpenFB allows you to login to Facebook and execute any Facebook Graph API request.
  * @author Christophe Coenraets @ccoenraets
- * @version 0.3
+ * @version 0.4
  */
 var openFB = (function () {
 
@@ -28,9 +28,9 @@ var openFB = (function () {
     // Used in the exit event handler to identify if the login has already been processed elsewhere (in the oauthCallback function)
         loginProcessed;
 
-    document.addEventListener("deviceready", function () {
-        runningInCordova = true;
-    }, false);
+        document.addEventListener("deviceready", function () {
+            runningInCordova = true;
+        }, false);
 
     /**
      * Initialize the OpenFB module. You must use this function and initialize the module with an appId before you can
@@ -43,7 +43,7 @@ var openFB = (function () {
         fbAppId = appId;
         if (redirectURL) oauthRedirectURL = redirectURL;
         if (store) tokenStore = store;
-    }
+    };
 
     /**
      * Login to Facebook using OAuth. If running in a Browser, the OAuth workflow happens in a a popup window.
@@ -70,7 +70,7 @@ var openFB = (function () {
                 }, timeout > 0 ? timeout : 0);
                 oauthCallback(url);
             }
-        }
+        };
 
         function loginWindowExit() {
             console.log('exit and remove listeners');
@@ -80,12 +80,12 @@ var openFB = (function () {
             loginWindow.removeEventListener('exit', loginWindowExit);
             loginWindow = null;
             console.log('done removing listeners');
-        }
+        };
 
 
         if (!fbAppId) {
             return error({error: 'Facebook App Id not set.'});
-        }
+        };
 
         scope = scope || '';
 
@@ -104,7 +104,7 @@ var openFB = (function () {
                 // could also use 'var origin = window.location.origin' when enough browsers support it
                 oauthRedirectURL = origin + '/oauthcallback.html';
             }
-        }
+        };
 
         startTime = new Date().getTime();
         loginWindow = window.open(FB_LOGIN_URL + '?client_id=' + fbAppId + '&redirect_uri=' + oauthRedirectURL +
@@ -118,7 +118,7 @@ var openFB = (function () {
         // Note: if the app is running in the browser the loginWindow dialog will call back by invoking the
         // oauthCallback() function. See oauthcallback.html for details.
 
-    }
+    };
 
     /**
      * Called either by oauthcallback.html (when the app is running the browser) or by the loginWindow loadstart event
@@ -144,14 +144,22 @@ var openFB = (function () {
         } else {
             if (loginErrorHandler) loginErrorHandler();
         }
-    }
+    };
 
     /**
-     * Application-level logout: we simply discard the token.
+     * Application-level logout: 
+     * Discard token and call remote logout url with facebook
+     * This allows the login process to fire correctly again without remembering the previous
+     * login information
+     * 
      */
     function logout() {
-        tokenStore['fbtoken'] = undefined;
-    }
+        if(tokenStore.getItem('fbtoken')){
+             window.open('https://www.facebook.com/logout.php?next=http://localhost/logoutcallback.html&access_token=' + tokenStore['fbtoken'], '_blank', 'location=no');
+        }
+        /* remove token completely. Will fail silently if does not exist */       
+        tokenStore.removeItem('fbtoken');
+    };
 
     /**
      * Lets you make any Facebook Graph API request.
@@ -186,7 +194,7 @@ var openFB = (function () {
 
         xhr.open(method, url, true);
         xhr.send();
-    }
+    };
 
     /**
      * Helper function to de-authorize the app
@@ -198,11 +206,11 @@ var openFB = (function () {
         return api({method: 'DELETE',
             path: '/me/permissions',
             success: function () {
-                tokenStore['fbtoken'] = undefined;
+                tokenStore.removeItem('fbtoken');
                 success();
             },
             error: error});
-    }
+    };
 
     function parseQueryString(queryString) {
         var qs = decodeURIComponent(queryString),
@@ -213,7 +221,7 @@ var openFB = (function () {
             obj[splitter[0]] = splitter[1];
         });
         return obj;
-    }
+    };
 
     function toQueryString(obj) {
         var parts = [];
@@ -223,7 +231,7 @@ var openFB = (function () {
             }
         }
         return parts.join("&");
-    }
+    };
 
     // The public API
     return {
@@ -233,6 +241,6 @@ var openFB = (function () {
         revokePermissions: revokePermissions,
         api: api,
         oauthCallback: oauthCallback
-    }
+    };
 
 }());
