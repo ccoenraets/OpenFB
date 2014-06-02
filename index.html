@@ -30,7 +30,7 @@
     openFB.init('YOUR_FB_APP_ID'); // Defaults to sessionStorage for storing the Facebook token
 
 //  Uncomment the line below to store the Facebook token in localStorage instead of sessionStorage
-//  openFB.init('YOUR_FB_APP_ID', 'http://localhost/openfb/oauthcallback.html', window.localStorage);
+//  openFB.init('YOUR_FB_APP_ID', {store: window.localStorage});
 
     function login() {
         openFB.login('email',
