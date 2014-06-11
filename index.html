@@ -13,7 +13,9 @@
 <hr/>
 
 <p>Name: <span id="userName"></span></p>
+<p>ID: <span id="userID"></span></p>
 <button class="btn btn-block" onclick="getInfo()">Get My Info</button>
+<button class="btn btn-block" onclick="getUserId()">Get My ID</button>
 <hr/>
 
 <textarea id="Message" placeholder="What's on your mind?" rows="5"></textarea>
@@ -26,11 +28,15 @@
 <script src="openfb.js"></script>
 
 <script>
-
-    openFB.init('YOUR_FB_APP_ID'); // Defaults to sessionStorage for storing the Facebook token
+        
+    openFB.init({
+        app_id: "YOUR_FB_APP_ID",
+        //redirect_url: "http://localhost/oauthcallback.html" // oauth redirect url
+        // auth_response: {access_token: "", expires_in: "", user_id: ""}, // restore a session
+    }); // Defaults to sessionStorage for storing the Facebook token
 
 //  Uncomment the line below to store the Facebook token in localStorage instead of sessionStorage
-//  openFB.init('YOUR_FB_APP_ID', 'http://localhost/openfb/oauthcallback.html', window.localStorage);
+//  openFB.init({app_id: 'YOUR_FB_APP_ID', redirect_url: 'http://localhost/openfb/oauthcallback.html', store: window.localStorage});
 
     function login() {
         openFB.login('email',
@@ -50,6 +56,22 @@
                 document.getElementById("userName").innerHTML = data.name;
             },
             error: errorHandler});
+    }
+    
+    function getUserId(){
+        
+        if (openFB.getAuthResponse())        
+            console.log(JSON.stringify(openFB.getAuthResponse()));
+
+        openFB.api({
+            path: "/me?fields:id",
+            success: function(data){
+                console.log(JSON.stringify(data));
+                document.getElementById("userID").innerHTML += data.id;
+            },
+            error: errorHandler
+        });
+
     }
 
     function share() {
