@@ -160,10 +160,9 @@ var openFB = (function () {
 
             api({
                 path: '/me?fields=id',
-                success: function(data) {                    
+                success: function(data) {
                     obj.auth_response.user_id = data.id;
                     tokenStore['user_id'] = obj.auth_response.user_id;
-                    console.log("The user was logged in with openFB");
                     
                     if (loginSuccessHandler) loginSuccessHandler(obj);
                 },
@@ -182,7 +181,7 @@ var openFB = (function () {
     }
     
     /**
-     * Get the auth response of the current user logged in.
+     * Get the auth response of the current user logged in. Similar to FB api.
      **/
     function getAuthResponse(){
 
