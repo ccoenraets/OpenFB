@@ -1,6 +1,6 @@
 # Modified OpenFB #
 
-Modified OpenFB is a fork of OpenFB (https://github.com/ccoenraets/OpenFB).
+Modified OpenFB is a fork of OpenFB.
 
 OpenFB is a micro-library that lets you integrate your JavaScript applications with Facebook. It works for both browser-based and Cordova/PhoneGap apps.
 
