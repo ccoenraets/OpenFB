@@ -1,4 +1,4 @@
-# Modified OpenFB #
+# OpenFB #
 
 Modified OpenFB is a fork of OpenFB.
 
