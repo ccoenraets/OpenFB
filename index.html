@@ -33,7 +33,7 @@
 //  openFB.init('YOUR_FB_APP_ID', 'http://localhost/openfb/oauthcallback.html', window.localStorage);
 
     function login() {
-        openFB.login('email',
+        openFB.login('email,publish_actions',
                 function() {
                     alert('Facebook login succeeded');
                 },
@@ -57,7 +57,7 @@
             method: 'POST',
             path: '/me/feed',
             params: {
-                message: 'Testing Facebook APIs'
+                message: document.getElementById('Message').value || 'Testing Facebook APIs'
             },
             success: function() {
                 alert('the item was posted on Facebook');
