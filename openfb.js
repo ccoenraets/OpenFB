@@ -39,10 +39,29 @@ var openFB = (function () {
      * @param redirectURL - The OAuth redirect URL. Optional. If not provided, we use sensible defaults.
      * @param store - The store used to save the Facebook token. Optional. If not provided, we use sessionStorage.
      */
-    function init(appId, redirectURL, store) {
-        fbAppId = appId;
-        if (redirectURL) oauthRedirectURL = redirectURL;
-        if (store) tokenStore = store;
+    function init(args) {
+        var app_id = args.app_id;
+        var redirect_url = args.redirect_url;
+        var store = args.store;
+        var auth_response = args.auth_response;
+
+        fbAppId = app_id;
+
+        if (redirect_url) {
+            oauthRedirectURL = redirect_url;
+        }
+
+        if (store) {
+            tokenStore = store;
+        }
+
+        // restore a authentication
+        if (auth_response){
+            tokenStore["fbtoken"] = auth_response["access_token"];
+            tokenStore["expires_in"] = auth_response["expires_in"];
+            tokenStore["user_id"] = auth_response["user_id"];
+        }
+        
     }
 
     /**
@@ -78,6 +97,7 @@ var openFB = (function () {
             deferredLogin.reject({error: 'user_cancelled', error_description: 'User cancelled login process', error_reason: "user_cancelled"});
             loginWindow.removeEventListener('loadstop', loginWindowLoadStart);
             loginWindow.removeEventListener('exit', loginWindowExit);
+            //loginWindow.close();
             loginWindow = null;
             console.log('done removing listeners');
         }
@@ -128,15 +148,29 @@ var openFB = (function () {
      */
     function oauthCallback(url) {
         // Parse the OAuth data received from Facebook
-        var queryString,
-            obj;
+        var queryString, obj;
 
         loginProcessed = true;
         if (url.indexOf("access_token=") > 0) {
+            obj = {};
             queryString = url.substr(url.indexOf('#') + 1);
-            obj = parseQueryString(queryString);
-            tokenStore['fbtoken'] = obj['access_token'];
-            if (loginSuccessHandler) loginSuccessHandler();
+            obj.auth_response = parseQueryString(queryString);
+            tokenStore['fbtoken'] = obj.auth_response['access_token'];
+            tokenStore['expires_in'] = obj.auth_response['expires_in'];
+
+            api({
+                path: '/me?fields=id',
+                success: function(data) {
+                    obj.auth_response.user_id = data.id;
+                    tokenStore['user_id'] = obj.auth_response.user_id;
+                    
+                    if (loginSuccessHandler) loginSuccessHandler(obj);
+                },
+                error: function(error){
+                    if (loginErrorHandler) loginErrorHandler(error);
+                }
+            });
+
         } else if (url.indexOf("error=") > 0) {
             queryString = url.substring(url.indexOf('?') + 1, url.indexOf('#'));
             obj = parseQueryString(queryString);
@@ -144,6 +178,23 @@ var openFB = (function () {
         } else {
             if (loginErrorHandler) loginErrorHandler();
         }
+    }
+    
+    /**
+     * Get the auth response of the current user logged in. Similar to FB api.
+     **/
+    function getAuthResponse(){
+
+        var auth_response = {};
+
+        if (tokenStore['fbtoken']){
+            auth_response.access_token = tokenStore['fbtoken'];
+            auth_response.expires_in = tokenStore['expires_in'];
+            auth_response.user_id = tokenStore['user_id'];  
+        }
+
+        return auth_response;
+
     }
 
     /**
@@ -171,7 +222,9 @@ var openFB = (function () {
 
         params['access_token'] = tokenStore['fbtoken'];
 
-        url = 'https://graph.facebook.com' + obj.path + '?' + toQueryString(params);
+        url = 'https://graph.facebook.com' + obj.path;
+        url += (obj.path.indexOf('?') > -1) ? '&' : '?';
+        url += toQueryString(params);
 
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
@@ -231,6 +284,7 @@ var openFB = (function () {
         login: login,
         logout: logout,
         revokePermissions: revokePermissions,
+        getAuthResponse: getAuthResponse,
         api: api,
         oauthCallback: oauthCallback
     }

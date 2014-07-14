@@ -1,5 +1,7 @@
 # OpenFB #
 
+Modified OpenFB is a fork of OpenFB.
+
 OpenFB is a micro-library that lets you integrate your JavaScript applications with Facebook. It works for both browser-based and Cordova/PhoneGap apps.
 
 OpenFB has no dependency: You don't need the Facebook plugin when running in Cordova. You also don't need the Facebook SDK.
@@ -28,6 +30,12 @@ Post on the user's feed:
             success: successHandler,
             error: errorHandler
         });
+
+Get the user ID:
+
+    openFB.api({path: '/me?fields:id', success: successHandler, error: errorHandler});
+
+
 
 The approach used in OpenFB (plain OAuth + direct requests to Graph API endpoints) is simple and lightweight, but it is definitely not perfect.
 
