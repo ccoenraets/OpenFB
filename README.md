@@ -10,7 +10,7 @@ Here are a few code examples...
 
 Login using Facebook:
 
-    openFB.login(scope, successHandler, errorHandler);
+    openFB.login(callback, {scope: 'email'});
 
 Get the user's list of friends:
 
