@@ -27,18 +27,19 @@
 
 <script>
 
-    openFB.init({appId: 'APP_ID'}); // Defaults to sessionStorage for storing the Facebook token
+     // Defaults to oauthcallback.html in root and sessionStorage for storing the Facebook token
+     openFB.init({appId: 'YOUR_FB_APP_ID'});
 
-//  Uncomment the line below to store the Facebook token in localStorage instead of sessionStorage
-//  openFB.init('YOUR_FB_APP_ID', 'http://localhost/openfb/oauthcallback.html', window.localStorage);
+    //  Uncomment the line below to specify custom redirect URL and store the Facebook token in localStorage instead of sessionStorage
+    //  openFB.init({appId: 'YOUR_FB_APP_ID', oauthRedirectURL: 'http://localhost/openfb/oauthcallback.html', tokenStore: window.localStorage});
 
     function login() {
         openFB.login(
                 function(response) {
-                    if(response.authResponse) {
+                    if(response.status === 'connected') {
                         alert('Facebook login succeeded, got access token: ' + response.authResponse.token);
                     } else {
-                        alert('Facebook login failed: ' + response.error_description);
+                        alert('Facebook login failed: ' + response.error);
                     }
                 }, {scope: 'email'});
     }
