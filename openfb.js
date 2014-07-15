@@ -10,12 +10,20 @@
 var openFB = (function () {
 
     var FB_LOGIN_URL = 'https://www.facebook.com/dialog/oauth',
+        FB_LOGOUT_URL = 'https://www.facebook.com/logout.php',
 
         // By default we store fbtoken in sessionStorage. This can be overridden in init()
         tokenStore = window.sessionStorage,
 
         fbAppId,
-        oauthRedirectURL,
+
+        context = window.location.pathname.substring(0, window.location.pathname.indexOf("/",2)),
+
+        baseURL = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '') + context,
+
+        oauthRedirectURL = baseURL + '/oauthcallback.html',
+
+        logoutRedirectURL = baseURL + '/logoutcallback.html',
 
         // Because the OAuth login spans multiple processes, we need to keep the login callback function as a variable
         // inside the module instead of keeping it local within the login function.
@@ -27,6 +35,9 @@ var openFB = (function () {
         // Used in the exit event handler to identify if the login has already been processed elsewhere (in the oauthCallback function)
         loginProcessed;
 
+    console.log(oauthRedirectURL);
+    console.log(logoutRedirectURL);
+
     document.addEventListener("deviceready", function () {
         runningInCordova = true;
     }, false);
@@ -36,7 +47,6 @@ var openFB = (function () {
      * use any other function.
      * @param params - init paramters
      *  appId: The id of the Facebook app,
-     *  oauthRedirectURL: The OAuth redirect URL. Optional. If not provided, we use sensible defaults.
      *  tokenStore: The store used to save the Facebook token. Optional. If not provided, we use sessionStorage.
      */
     function init(params) {
@@ -44,10 +54,6 @@ var openFB = (function () {
             fbAppId = params.appId;
         } else {
             throw 'appId parameter not set in init()';
-        }
-
-        if (params.oauthRedirectURL) {
-            oauthRedirectURL = params.oauthRedirectURL;
         }
 
         if (params.tokenStore) {
@@ -121,24 +127,12 @@ var openFB = (function () {
 
         loginCallback = callback;
         loginProcessed = false;
-        logout();
 
-        // Check if an explicit oauthRedirectURL has been provided in init(). If not, infer the appropriate value
-        if (!oauthRedirectURL) {
-            if (runningInCordova) {
-                oauthRedirectURL = 'https://www.facebook.com/connect/login_success.html';
-            } else {
-                var origin = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '');
-                // could also use 'var origin = window.location.origin' when enough browsers support it
-                oauthRedirectURL = origin + '/oauthcallback.html';
-            }
-        }
-
-        console.log('OpenFB oauthRedirectURL: ' + oauthRedirectURL + ' - Make sure this URL is defined as a valid OAuth Redirect URL in your Facebook App settings');
+//        logout();
 
         startTime = new Date().getTime();
         loginWindow = window.open(FB_LOGIN_URL + '?client_id=' + fbAppId + '&redirect_uri=' + oauthRedirectURL +
-            '&response_type=token&display=popup&scope=' + scope, '_blank', 'location=no');
+            '&response_type=token&scope=' + scope, '_blank', 'location=no');
 
         // If the app is running in Cordova, listen to URL changes in the InAppBrowser until we get a URL with an access_token or an error
         if (runningInCordova) {
@@ -177,13 +171,30 @@ var openFB = (function () {
     }
 
     /**
-     * Application-level logout: we simply discard the token.
+     * Logout from Facebook, and remove the token.
+     * IMPORTANT: For the Facebook logout to work, the logoutRedirectURL must be on the domain specified in "Site URL" in your Facebook App Settings
+     *
      */
     function logout(callback) {
-        tokenStore['fbtoken'] = undefined;
+        var logoutWindow,
+            token = tokenStore['fbtoken'];
+
+        /* Remove token. Will fail silently if does not exist */
+        tokenStore.removeItem('fbtoken');
+
+        if (token) {
+            logoutWindow = window.open(FB_LOGOUT_URL + '?access_token=' + token + '&next=' + logoutRedirectURL, '_blank', 'location=no');
+            if (runningInCordova) {
+                setTimeout(function() {
+                    logoutWindow.close();
+                }, 700);
+            }
+        }
+
         if (callback) {
             callback();
         }
+
     }
 
     /**
