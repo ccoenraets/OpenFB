@@ -56,20 +56,6 @@ var openFB = (function () {
     }
 
     /**
-     * Converts the Facebook response so it is in the same format as the Facebook SDK response.
-     * @param token
-     * @returns object
-     */
-    function getFacebookResponse(token) {
-        var facebookResponse = {status: 'unknown'};
-        if (token) {
-            facebookResponse.status = 'connected';
-            facebookResponse.authResponse = {token: token};
-        }
-        return facebookResponse;
-    }
-
-    /**
      * Checks if the user has logged in with openFB and currently has a session api token.
      * @param callback the function that receives the loginstatus
      */
