@@ -12,26 +12,34 @@
 <button class="btn btn-block" onclick="login()">Login with Facebook</button>
 <hr/>
 
-<p>Name: <span id="userName"></span></p>
 <button class="btn btn-block" onclick="getInfo()">Get My Info</button>
+<p>Name: <span id="userName"></span></p>
+<img id="userPic"/>
 <hr/>
 
 <textarea id="Message" placeholder="What's on your mind?" rows="5"></textarea>
 <button class="btn btn-block" onclick="share()">Share</button>
 <hr/>
 
+<p>Complete Facebook Logout. After logging out, you'll have to login again and provide your Facebook credentials.</p>
+<button class="btn btn-block" onclick="logout()">Logout</button>
+<hr/>
+
+<p>Revoke App Permissions. After revoking permissions, you'll have to grant permissions again when logging in.</p>
 <button class="btn btn-block" onclick="revoke()">Revoke Permissions</button>
 
+<!--cordova.js is automatically injected by the Cordova build process-->
 <script src="cordova.js"></script>
+
 <script src="openfb.js"></script>
 
 <script>
 
-     // Defaults to oauthcallback.html in root and sessionStorage for storing the Facebook token
+     // Defaults to sessionStorage for storing the Facebook token
      openFB.init({appId: 'YOUR_FB_APP_ID'});
 
-    //  Uncomment the line below to specify custom redirect URL and store the Facebook token in localStorage instead of sessionStorage
-    //  openFB.init({appId: 'YOUR_FB_APP_ID', oauthRedirectURL: 'http://localhost/openfb/oauthcallback.html', tokenStore: window.localStorage});
+    //  Uncomment the line below to store the Facebook token in localStorage instead of sessionStorage
+    //  openFB.init({appId: 'YOUR_FB_APP_ID', tokenStore: window.localStorage});
 
     function login() {
         openFB.login(
@@ -41,7 +49,7 @@
                     } else {
                         alert('Facebook login failed: ' + response.error);
                     }
-                }, {scope: 'email'});
+                }, {scope: 'email,read_stream,publish_stream'});
     }
 
     function getInfo() {
@@ -50,6 +58,7 @@
             success: function(data) {
                 console.log(JSON.stringify(data));
                 document.getElementById("userName").innerHTML = data.name;
+                document.getElementById("userPic").src = 'http://graph.facebook.com/' + data.id + '/picture?type=small';
             },
             error: errorHandler});
     }
@@ -71,6 +80,14 @@
         openFB.revokePermissions(
                 function() {
                     alert('Permissions revoked');
+                },
+                errorHandler);
+    }
+
+    function logout() {
+        openFB.logout(
+                function() {
+                    alert('Logout successful');
                 },
                 errorHandler);
     }
