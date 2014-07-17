@@ -130,6 +130,10 @@ var openFB = (function () {
 
 //        logout();
 
+        if (runningInCordova) {
+            oauthRedirectURL = "https://www.facebook.com/connect/login_success.html";
+        }
+
         startTime = new Date().getTime();
         loginWindow = window.open(FB_LOGIN_URL + '?client_id=' + fbAppId + '&redirect_uri=' + oauthRedirectURL +
             '&response_type=token&scope=' + scope, '_blank', 'location=no');
