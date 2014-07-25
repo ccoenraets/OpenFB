@@ -254,7 +254,8 @@ var openFB = (function () {
         return api({method: 'DELETE',
             path: '/me/permissions',
             success: function () {
-                tokenStore['fbtoken'] = undefined;
+		/* Remove token. Will fail silently if does not exist */
+        	tokenStore.removeItem('fbtoken');
                 success();
             },
             error: error});
