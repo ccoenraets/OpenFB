@@ -73,6 +73,20 @@ var createOpenFB = function () {
 	if (params.logoutUrl) {
 		FB_LOGOUT_URL = params.logoutUrl;
 	}
+
+	if (params.runningInCordova) {
+		runningInCordova = true;
+		oauthRedirectURL = "https://www.facebook.com/connect/login_success.html";
+		logoutRedirectURL = "https://www.facebook.com/connect/login_success.html";
+	}
+
+	if (params.oauthRedirectURL) {
+		oauthRedirectURL = params.oauthRedirectURL;
+	}
+
+	if (params.logoutRedirectURL) {
+		logoutRedirectURL = params.logoutRedirectURL;
+	}
     }
 
     /**
@@ -143,10 +157,6 @@ var createOpenFB = function () {
         loginProcessed = false;
 
 //        logout();
-
-        if (runningInCordova) {
-            oauthRedirectURL = "https://www.facebook.com/connect/login_success.html";
-        }
 
         startTime = new Date().getTime();
         loginWindow = window.open(FB_LOGIN_URL + '?client_id=' + fbAppId + '&redirect_uri=' + oauthRedirectURL +
