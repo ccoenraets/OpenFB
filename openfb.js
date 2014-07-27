@@ -7,7 +7,7 @@
  * @author Christophe Coenraets @ccoenraets
  * @version 0.4
  */
-var openFB = (function () {
+var createFB = function () {
 
     var FB_LOGIN_URL = 'https://www.facebook.com/dialog/oauth',
         FB_LOGOUT_URL = 'https://www.facebook.com/logout.php',
@@ -284,4 +284,5 @@ var openFB = (function () {
         getLoginStatus: getLoginStatus
     }
 
-}());
+};
+var openFB = createFB();
