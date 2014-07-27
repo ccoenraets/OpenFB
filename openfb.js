@@ -90,11 +90,24 @@ var createFB = function () {
 
         var loginWindow,
             startTime,
-            scope = '';
+            scope = '',
+	    loginRedirectUrl = '',
+	    loginUrl = '';
 
         if (!fbAppId) {
             return callback({status: 'unknown', error: 'Facebook App Id not set.'});
         }
+        if (runningInCordova) {
+            loginRedirectUrl = "https://www.facebook.com/connect/login_success.html";
+        }
+	else {
+	    loginRedirectUrl = oauthRedirectURL;
+	}
+        if (options && options.scope) {
+            scope = options.scope;
+        }
+	loginUrl = FB_LOGIN_URL + '?client_id=' + fbAppId + '&redirect_uri=' + loginRedirectUrl +
+            '&response_type=token&scope=' + scope;
 
         // Inappbrowser load start handler: Used when running in Cordova only
         function loginWindow_loadStartHandler(event) {
@@ -121,22 +134,15 @@ var createFB = function () {
             console.log('done removing listeners');
         }
 
-        if (options && options.scope) {
-            scope = options.scope;
-        }
 
         loginCallback = callback;
         loginProcessed = false;
 
 //        logout();
 
-        if (runningInCordova) {
-            oauthRedirectURL = "https://www.facebook.com/connect/login_success.html";
-        }
 
         startTime = new Date().getTime();
-        loginWindow = window.open(FB_LOGIN_URL + '?client_id=' + fbAppId + '&redirect_uri=' + oauthRedirectURL +
-            '&response_type=token&scope=' + scope, '_blank', 'location=no');
+        loginWindow = window.open(loginUrl, '_blank', 'location=no');
 
         // If the app is running in Cordova, listen to URL changes in the InAppBrowser until we get a URL with an access_token or an error
         if (runningInCordova) {
