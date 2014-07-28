@@ -89,7 +89,6 @@ var createFB = function () {
     function login(callback, options) {
 
         var loginWindow,
-            startTime,
             scope = '',
 	    loginRedirectUrl = '',
 	    loginUrl = '';
@@ -109,6 +108,9 @@ var createFB = function () {
 	loginUrl = FB_LOGIN_URL + '?client_id=' + fbAppId + '&redirect_uri=' + loginRedirectUrl +
             '&response_type=token&scope=' + scope;
 
+	loginGeneral(callback, loginUrl, runningInCordova);
+    }
+    function loginGeneral(callback, loginUrl, isRunningInCordova) {
         // Inappbrowser load start handler: Used when running in Cordova only
         function loginWindow_loadStartHandler(event) {
             var url = event.url;
@@ -141,11 +143,11 @@ var createFB = function () {
 //        logout();
 
 
-        startTime = new Date().getTime();
+        var startTime = new Date().getTime();
         loginWindow = window.open(loginUrl, '_blank', 'location=no');
 
         // If the app is running in Cordova, listen to URL changes in the InAppBrowser until we get a URL with an access_token or an error
-        if (runningInCordova) {
+        if (isRunningInCordova) {
             loginWindow.addEventListener('loadstart', loginWindow_loadStartHandler);
             loginWindow.addEventListener('exit', loginWindow_exitHandler);
         }
