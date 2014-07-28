@@ -15,6 +15,9 @@ var createFB = function () {
         // By default we store fbtoken in sessionStorage. This can be overridden in init()
         tokenStore = window.sessionStorage,
 
+	// Dynamic token storage key to support multiple services
+	tokenKey = 'fbtoken',
+
         fbAppId,
 
         context = window.location.pathname.substring(0, window.location.pathname.indexOf("/",2)),
@@ -72,6 +75,10 @@ var createFB = function () {
             throw 'loginScope parameter not set in init()';
         }
 
+	if (params.tokenKey) {
+	    tokenKey = params.tokenKey;
+	}
+
         if (runningInCordova) {
 	    // Login works with pretty much anything such as http://localhost
             oauthRedirectURL = "https://www.facebook.com/connect/login_success.html";
@@ -95,7 +102,7 @@ var createFB = function () {
      * @param callback the function that receives the loginstatus
      */
     function getLoginStatus(callback) {
-        var token = tokenStore['fbtoken'],
+        var token = tokenStore[tokenKey],
             loginStatus = {};
         if (token) {
             loginStatus.status = 'connected';
@@ -185,7 +192,7 @@ var createFB = function () {
         if (url.indexOf("access_token=") > 0) {
             queryString = url.substr(url.indexOf('#') + 1);
             obj = parseQueryString(queryString);
-            tokenStore['fbtoken'] = obj['access_token'];
+            tokenStore[tokenKey] = obj['access_token'];
             if (loginCallback) loginCallback({status: 'connected', authResponse: {token: obj['access_token']}});
         } else if (url.indexOf("error=") > 0) {
             queryString = url.substring(url.indexOf('?') + 1, url.indexOf('#'));
@@ -202,7 +209,7 @@ var createFB = function () {
      *
      */
     function logout(callback) {
-        var token = tokenStore['fbtoken'];
+        var token = tokenStore[tokenKey];
 	    logoutUrl = FB_LOGOUT_URL + '?access_token=' + token + '&next=' + logoutRedirectURL;
 
 	logoutGeneral(callback, token, logoutUrl, runningInCordova);
@@ -211,7 +218,7 @@ var createFB = function () {
     // TODO: Move to a separate 'class' to support other services
     function logoutGeneral(callback, token, logoutUrl, isRunningInCordova) {
         /* Remove token. Will fail silently if does not exist */
-        tokenStore.removeItem('fbtoken');
+        tokenStore.removeItem(tokenKey);
 
         if (token) {
             var logoutWindow = window.open(logoutUrl, '_blank', 'location=no');
@@ -244,7 +251,7 @@ var createFB = function () {
             xhr = new XMLHttpRequest(),
             url;
 
-        params['access_token'] = tokenStore['fbtoken'];
+        params['access_token'] = tokenStore[tokenKey];
 
         url = 'https://graph.facebook.com' + obj.path + '?' + toQueryString(params);
 
@@ -273,7 +280,7 @@ var createFB = function () {
         return api({method: 'DELETE',
             path: '/me/permissions',
             success: function () {
-                tokenStore['fbtoken'] = undefined;
+                tokenStore[tokenKey] = undefined;
                 success();
             },
             error: error});
