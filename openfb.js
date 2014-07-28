@@ -112,6 +112,52 @@ var createOpenOAuth = function (params) {
 
     }
 
+    /**
+     * Lets you make any Facebook Graph API request.
+     * @param obj - Request configuration object. Can include:
+     *  method:  HTTP method: GET, POST, etc. Optional - Default is 'GET'
+     *  path:    path in the Facebook graph: /me, /me.friends, etc. - Required
+     *  params:  queryString parameters as a map - Optional
+     *  success: callback function when operation succeeds - Optional
+     *  error:   callback function when operation fails - Optional
+     */
+    function api(obj) {
+
+        var method = obj.method || 'GET',
+            params = obj.params || {},
+            xhr = new XMLHttpRequest(),
+            url;
+
+        params['access_token'] = getToken();
+
+        url = 'https://graph.facebook.com' + obj.path + '?' + toQueryString(params);
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    if (obj.success) obj.success(JSON.parse(xhr.responseText));
+                } else {
+                    var error = xhr.responseText ? JSON.parse(xhr.responseText).error : {message: 'An error has occurred'};
+                    if (obj.error) obj.error(error);
+                }
+            }
+        };
+
+        xhr.open(method, url, true);
+        xhr.send();
+    }
+
+    function toQueryString(obj) {
+        var parts = [];
+        for (var i in obj) {
+            if (obj.hasOwnProperty(i)) {
+                parts.push(encodeURIComponent(i) + "=" + encodeURIComponent(obj[i]));
+            }
+        }
+        return parts.join("&");
+    }
+
+
     // The public API
     return {
         getToken: getToken,
@@ -119,7 +165,8 @@ var createOpenOAuth = function (params) {
         removeToken: removeToken,
         getLoginStatus: getLoginStatus,
         login: login,
-        logout: logout
+        logout: logout,
+        api: api
     }
 }
 /**
@@ -287,29 +334,7 @@ var createFB = function () {
      *  error:   callback function when operation fails - Optional
      */
     function api(obj) {
-
-        var method = obj.method || 'GET',
-            params = obj.params || {},
-            xhr = new XMLHttpRequest(),
-            url;
-
-        params['access_token'] = openOAuth.getToken();
-
-        url = 'https://graph.facebook.com' + obj.path + '?' + toQueryString(params);
-
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    if (obj.success) obj.success(JSON.parse(xhr.responseText));
-                } else {
-                    var error = xhr.responseText ? JSON.parse(xhr.responseText).error : {message: 'An error has occurred'};
-                    if (obj.error) obj.error(error);
-                }
-            }
-        };
-
-        xhr.open(method, url, true);
-        xhr.send();
+        openOAuth.api(obj);
     }
 
     /**
@@ -337,16 +362,6 @@ var createFB = function () {
             obj[splitter[0]] = splitter[1];
         });
         return obj;
-    }
-
-    function toQueryString(obj) {
-        var parts = [];
-        for (var i in obj) {
-            if (obj.hasOwnProperty(i)) {
-                parts.push(encodeURIComponent(i) + "=" + encodeURIComponent(obj[i]));
-            }
-        }
-        return parts.join("&");
     }
 
     // The public API
