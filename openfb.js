@@ -46,11 +46,6 @@ var createFB = function () {
 	// Store login url. Avoid calculate each time call login
 	loginUrl = '';
 
-
-    document.addEventListener("deviceready", function () {
-        runningInCordova = true;
-    }, false);
-
     /**
      * Initialize the OpenFB module. You must use this function and initialize the module with an appId before you can
      * use any other function.
@@ -78,6 +73,9 @@ var createFB = function () {
 	if (params.tokenKey) {
 	    tokenKey = params.tokenKey;
 	}
+
+	// phonegap is for old version support
+	runningInCordova = !!window.cordova || !!window.phonegap;
 
         if (runningInCordova) {
 	    // Login works with pretty much anything such as http://localhost
