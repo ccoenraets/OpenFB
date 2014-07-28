@@ -1,13 +1,19 @@
 var createOpenOAuth = function (params) {
     // Use jQuery $extend would make this much easier but will make this depend on jQuery.
-    var tokenKey;
+    var tokenKey,
+        tokenStore,
+        loginUrl;
+    if (params.loginUrl) {
+        loginUrl = params.loginUrl;
+    } else {
+        throw 'loginUrl parameter not set';
+    }
     if (params.tokenKey) {
         tokenKey = params.tokenKey;
     } else {
         throw 'tokenKey parameter not set';
     }
 
-    var tokenStore;
     if (params.tokenStore) {
         tokenStore = params.tokenStore;
     } else {
@@ -44,7 +50,7 @@ var createOpenOAuth = function (params) {
         }
     }
 
-    function login(loginUrl, isRunningInCordova, oauthCallback) {
+    function login(isRunningInCordova, oauthCallback) {
         var startTime = new Date().getTime(),
             loginWindow = window.open(loginUrl, '_blank', 'location=no');
 
@@ -132,9 +138,6 @@ var createFB = function () {
 	// I do not see the need of dynamically change scope in each login call
 	loginScope,
 
-	// Store login url. Avoid calculate each time call login
-	loginUrl = '',
-
         // Gradually move things here to support other services in the future
         openOAuth;
 
@@ -158,11 +161,6 @@ var createFB = function () {
             throw 'loginScope parameter not set in init()';
         }
 
-	if (!params.tokenKey) {
-            params['tokenKey'] = 'fbtoken';
-        }
-        openOAuth = createOpenOAuth(params);
-
 	// phonegap is for old version support
 	runningInCordova = !!window.cordova || !!window.phonegap;
 
@@ -179,9 +177,18 @@ var createFB = function () {
     	console.log(oauthRedirectURL);
     	console.log(logoutRedirectURL);
 
-	loginUrl = FB_LOGIN_URL + '?client_id=' + fbAppId + '&redirect_uri=' + oauthRedirectURL +
+	var loginUrl = FB_LOGIN_URL + '?client_id=' + fbAppId + '&redirect_uri=' + oauthRedirectURL +
             '&response_type=token&scope=' + loginScope;
 	console.log(loginUrl);
+
+	if (!params.tokenKey) {
+            params['tokenKey'] = 'fbtoken';
+        }
+        if (!params.loginUrl) {
+            params['loginUrl'] = loginUrl;
+        }
+        openOAuth = createOpenOAuth(params);
+
     }
 
     /**
@@ -209,7 +216,7 @@ var createFB = function () {
         loginCallback = callback;
         loginProcessed = false;
 
-	openOAuth.login(loginUrl, runningInCordova, oauthCallback);
+	openOAuth.login(runningInCordova, oauthCallback);
     }
 
 
