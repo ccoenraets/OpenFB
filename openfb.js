@@ -27,7 +27,7 @@ var createOpenOAuth = function (params) {
     }
 
     /**
-     * Checks if the user has logged in with openFB and currently has a session api token.
+     * Checks if the user has logged in with OpenOAuth and currently has a session api token.
      * @param callback the function that receives the loginstatus
      */
     function getLoginStatus(callback) {
