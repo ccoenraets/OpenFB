@@ -1,3 +1,38 @@
+var createOpenOAuth = function (params) {
+    // Use jQuery $extend would make this much easier but will make this depend on jQuery.
+    var tokenKey;
+    if (params.tokenKey) {
+        tokenKey = params.tokenKey;
+    } else {
+        throw 'tokenKey parameter not set';
+    }
+
+    var tokenStore;
+    if (params.tokenStore) {
+        tokenStore = params.tokenStore;
+    } else {
+        tokenStore = window.localStorage;
+    }
+
+    function getToken() {
+        return tokenStore[tokenKey];
+    }
+
+    function setToken(token) {
+        tokenStore[tokenKey] = token;
+    }
+
+    function removeToken(token) {
+        tokenStore.removeItem(tokenKey);
+    }
+
+    // The public API
+    return {
+        getToken: getToken,
+        setToken: setToken,
+        removeToken: removeToken
+    }
+}
 /**
  * OpenFB is a micro-library that lets you integrate your JavaScript application with Facebook.
  * OpenFB works for both BROWSER-BASED apps and CORDOVA/PHONEGAP apps.
@@ -11,12 +46,6 @@ var createFB = function () {
 
     var FB_LOGIN_URL = 'https://www.facebook.com/dialog/oauth',
         FB_LOGOUT_URL = 'https://www.facebook.com/logout.php',
-
-        // By default we store fbtoken in sessionStorage. This can be overridden in init()
-        tokenStore = window.sessionStorage,
-
-	// Dynamic token storage key to support multiple services
-	tokenKey = 'fbtoken',
 
         fbAppId,
 
@@ -44,7 +73,10 @@ var createFB = function () {
 	loginScope,
 
 	// Store login url. Avoid calculate each time call login
-	loginUrl = '';
+	loginUrl = '',
+
+        // Gradually move things here to support other services in the future
+        openOAuth;
 
     /**
      * Initialize the OpenFB module. You must use this function and initialize the module with an appId before you can
@@ -66,12 +98,10 @@ var createFB = function () {
             throw 'loginScope parameter not set in init()';
         }
 
-        if (params.tokenStore) {
-            tokenStore = params.tokenStore;
+	if (!params.tokenKey) {
+            params['tokenKey'] = 'fbtoken';
         }
-	if (params.tokenKey) {
-	    tokenKey = params.tokenKey;
-	}
+        openOAuth = createOpenOAuth(params);
 
 	// phonegap is for old version support
 	runningInCordova = !!window.cordova || !!window.phonegap;
@@ -99,7 +129,7 @@ var createFB = function () {
      * @param callback the function that receives the loginstatus
      */
     function getLoginStatus(callback) {
-        var token = tokenStore[tokenKey],
+        var token = openOAuth.getToken(),
             loginStatus = {};
         if (token) {
             loginStatus.status = 'connected';
@@ -189,7 +219,7 @@ var createFB = function () {
         if (url.indexOf("access_token=") > 0) {
             queryString = url.substr(url.indexOf('#') + 1);
             obj = parseQueryString(queryString);
-            tokenStore[tokenKey] = obj['access_token'];
+            openOAuth.setToken(obj['access_token']);
             if (loginCallback) loginCallback({status: 'connected', authResponse: {token: obj['access_token']}});
         } else if (url.indexOf("error=") > 0) {
             queryString = url.substring(url.indexOf('?') + 1, url.indexOf('#'));
@@ -206,7 +236,7 @@ var createFB = function () {
      *
      */
     function logout(callback) {
-        var token = tokenStore[tokenKey];
+        var token = openOAuth.getToken();
 	    logoutUrl = FB_LOGOUT_URL + '?access_token=' + token + '&next=' + logoutRedirectURL;
 
 	logoutGeneral(callback, token, logoutUrl, runningInCordova);
@@ -215,7 +245,7 @@ var createFB = function () {
     // TODO: Move to a separate 'class' to support other services
     function logoutGeneral(callback, token, logoutUrl, isRunningInCordova) {
         /* Remove token. Will fail silently if does not exist */
-        tokenStore.removeItem(tokenKey);
+        openOAuth.removeToken();
 
         if (token) {
             var logoutWindow = window.open(logoutUrl, '_blank', 'location=no');
@@ -248,7 +278,7 @@ var createFB = function () {
             xhr = new XMLHttpRequest(),
             url;
 
-        params['access_token'] = tokenStore[tokenKey];
+        params['access_token'] = openOAuth.getToken();
 
         url = 'https://graph.facebook.com' + obj.path + '?' + toQueryString(params);
 
@@ -277,7 +307,7 @@ var createFB = function () {
         return api({method: 'DELETE',
             path: '/me/permissions',
             success: function () {
-                tokenStore[tokenKey] = undefined;
+                openOAuth.removeToken();
                 success();
             },
             error: error});
