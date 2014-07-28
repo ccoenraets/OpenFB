@@ -26,11 +26,28 @@ var createOpenOAuth = function (params) {
         tokenStore.removeItem(tokenKey);
     }
 
+    /**
+     * Checks if the user has logged in with openFB and currently has a session api token.
+     * @param callback the function that receives the loginstatus
+     */
+    function getLoginStatus(callback) {
+        var token = getToken(),
+            loginStatus = {};
+        if (token) {
+            loginStatus.status = 'connected';
+            loginStatus.authResponse = {token: token};
+        } else {
+            loginStatus.status = 'unknown';
+        }
+        if (callback) callback(loginStatus);
+    }
+
     // The public API
     return {
         getToken: getToken,
         setToken: setToken,
-        removeToken: removeToken
+        removeToken: removeToken,
+        getLoginStatus: getLoginStatus
     }
 }
 /**
@@ -129,15 +146,7 @@ var createFB = function () {
      * @param callback the function that receives the loginstatus
      */
     function getLoginStatus(callback) {
-        var token = openOAuth.getToken(),
-            loginStatus = {};
-        if (token) {
-            loginStatus.status = 'connected';
-            loginStatus.authResponse = {token: token};
-        } else {
-            loginStatus.status = 'unknown';
-        }
-        if (callback) callback(loginStatus);
+        openOAuth.getLoginStatus(callback);
     }
 
     /**
