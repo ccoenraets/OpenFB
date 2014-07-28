@@ -123,6 +123,7 @@ var createFB = function () {
 	loginGeneral(callback, loginUrl, runningInCordova);
     }
 
+    // TODO: Move to a separate 'class' to support other services
     function loginGeneral(callback, loginUrl, isRunningInCordova) {
         // Inappbrowser load start handler: Used when running in Cordova only
         function loginWindow_loadStartHandler(event) {
@@ -201,15 +202,20 @@ var createFB = function () {
      *
      */
     function logout(callback) {
-        var logoutWindow,
-            token = tokenStore['fbtoken'];
+        var token = tokenStore['fbtoken'];
+	    logoutUrl = FB_LOGOUT_URL + '?access_token=' + token + '&next=' + logoutRedirectURL;
 
+	logoutGeneral(callback, token, logoutUrl, runningInCordova);
+    }
+
+    // TODO: Move to a separate 'class' to support other services
+    function logoutGeneral(callback, token, logoutUrl, isRunningInCordova) {
         /* Remove token. Will fail silently if does not exist */
         tokenStore.removeItem('fbtoken');
 
         if (token) {
-            logoutWindow = window.open(FB_LOGOUT_URL + '?access_token=' + token + '&next=' + logoutRedirectURL, '_blank', 'location=no');
-            if (runningInCordova) {
+            var logoutWindow = window.open(logoutUrl, '_blank', 'location=no');
+            if (isRunningInCordova) {
                 setTimeout(function() {
                     logoutWindow.close();
                 }, 700);
