@@ -90,13 +90,33 @@ var createOpenOAuth = function (params) {
 
     }
 
+    function logout(logoutUrl, callback, isRunningInCordova) {
+        if (getToken()) {
+            var logoutWindow = window.open(logoutUrl, '_blank', 'location=no');
+            if (isRunningInCordova) {
+                setTimeout(function() {
+                    logoutWindow.close();
+                }, 700);
+            }
+        }
+
+        /* Remove token. Will fail silently if does not exist */
+        removeToken();
+
+        if (callback) {
+            callback();
+        }
+
+    }
+
     // The public API
     return {
         getToken: getToken,
         setToken: setToken,
         removeToken: removeToken,
         getLoginStatus: getLoginStatus,
-        login: login
+        login: login,
+        logout: logout
     }
 }
 /**
@@ -252,30 +272,9 @@ var createFB = function () {
      *
      */
     function logout(callback) {
-        var token = openOAuth.getToken();
-	    logoutUrl = FB_LOGOUT_URL + '?access_token=' + token + '&next=' + logoutRedirectURL;
+        var logoutUrl = FB_LOGOUT_URL + '?access_token=' + openOAuth.getToken() + '&next=' + logoutRedirectURL;
 
-	logoutGeneral(callback, token, logoutUrl, runningInCordova);
-    }
-
-    // TODO: Move to a separate 'class' to support other services
-    function logoutGeneral(callback, token, logoutUrl, isRunningInCordova) {
-        /* Remove token. Will fail silently if does not exist */
-        openOAuth.removeToken();
-
-        if (token) {
-            var logoutWindow = window.open(logoutUrl, '_blank', 'location=no');
-            if (isRunningInCordova) {
-                setTimeout(function() {
-                    logoutWindow.close();
-                }, 700);
-            }
-        }
-
-        if (callback) {
-            callback();
-        }
-
+	openOAuth.logout(logoutUrl, callback, runningInCordova);
     }
 
     /**
