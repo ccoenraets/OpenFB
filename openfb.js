@@ -21,7 +21,9 @@ var createFB = function () {
 
         baseURL = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '') + context,
 
-        oauthRedirectURL = baseURL + '/oauthcallback.html',
+	// Move calculate of this value into init function
+	// Requires call init function after device ready to calculate correctly
+        oauthRedirectURL = '',
 
         logoutRedirectURL = baseURL + '/logoutcallback.html',
 
@@ -35,7 +37,6 @@ var createFB = function () {
         // Used in the exit event handler to identify if the login has already been processed elsewhere (in the oauthCallback function)
         loginProcessed;
 
-    console.log(oauthRedirectURL);
     console.log(logoutRedirectURL);
 
     document.addEventListener("deviceready", function () {
@@ -59,6 +60,14 @@ var createFB = function () {
         if (params.tokenStore) {
             tokenStore = params.tokenStore;
         }
+
+        if (runningInCordova) {
+            oauthRedirectURL = "https://www.facebook.com/connect/login_success.html";
+        }
+	else {
+            oauthRedirectURL = baseURL + '/oauthcallback.html';
+	}
+    	console.log(oauthRedirectURL);
     }
 
     /**
@@ -90,26 +99,20 @@ var createFB = function () {
 
         var loginWindow,
             scope = '',
-	    loginRedirectUrl = '',
 	    loginUrl = '';
 
         if (!fbAppId) {
             return callback({status: 'unknown', error: 'Facebook App Id not set.'});
         }
-        if (runningInCordova) {
-            loginRedirectUrl = "https://www.facebook.com/connect/login_success.html";
-        }
-	else {
-	    loginRedirectUrl = oauthRedirectURL;
-	}
         if (options && options.scope) {
             scope = options.scope;
         }
-	loginUrl = FB_LOGIN_URL + '?client_id=' + fbAppId + '&redirect_uri=' + loginRedirectUrl +
+	loginUrl = FB_LOGIN_URL + '?client_id=' + fbAppId + '&redirect_uri=' + oauthRedirectURL +
             '&response_type=token&scope=' + scope;
 
 	loginGeneral(callback, loginUrl, runningInCordova);
     }
+
     function loginGeneral(callback, loginUrl, isRunningInCordova) {
         // Inappbrowser load start handler: Used when running in Cordova only
         function loginWindow_loadStartHandler(event) {
