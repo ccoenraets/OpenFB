@@ -116,21 +116,14 @@ var createOpenOAuth = function (params) {
      * Lets you make any Facebook Graph API request.
      * @param obj - Request configuration object. Can include:
      *  method:  HTTP method: GET, POST, etc. Optional - Default is 'GET'
-     *  path:    path in the Facebook graph: /me, /me.friends, etc. - Required
-     *  params:  queryString parameters as a map - Optional
+     *  url::    Url to call - Required
      *  success: callback function when operation succeeds - Optional
      *  error:   callback function when operation fails - Optional
      */
     function api(obj) {
 
         var method = obj.method || 'GET',
-            params = obj.params || {},
-            xhr = new XMLHttpRequest(),
-            url;
-
-        params['access_token'] = getToken();
-
-        url = 'https://graph.facebook.com' + obj.path + '?' + toQueryString(params);
+            xhr = new XMLHttpRequest();
 
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
@@ -143,20 +136,9 @@ var createOpenOAuth = function (params) {
             }
         };
 
-        xhr.open(method, url, true);
+        xhr.open(method, obj.url, true);
         xhr.send();
     }
-
-    function toQueryString(obj) {
-        var parts = [];
-        for (var i in obj) {
-            if (obj.hasOwnProperty(i)) {
-                parts.push(encodeURIComponent(i) + "=" + encodeURIComponent(obj[i]));
-            }
-        }
-        return parts.join("&");
-    }
-
 
     // The public API
     return {
@@ -182,6 +164,7 @@ var createFB = function () {
 
     var FB_LOGIN_URL = 'https://www.facebook.com/dialog/oauth',
         FB_LOGOUT_URL = 'https://www.facebook.com/logout.php',
+        FB_API_URL = 'https://graph.facebook.com',
 
         fbAppId,
 
@@ -334,7 +317,21 @@ var createFB = function () {
      *  error:   callback function when operation fails - Optional
      */
     function api(obj) {
+        var params = obj.params || {};
+        params['access_token'] = openOAuth.getToken();
+        obj['url'] = FB_API_URL + obj.path + '?' + toQueryString(params);
+
         openOAuth.api(obj);
+    }
+
+    function toQueryString(obj) {
+        var parts = [];
+        for (var i in obj) {
+            if (obj.hasOwnProperty(i)) {
+                parts.push(encodeURIComponent(i) + "=" + encodeURIComponent(obj[i]));
+            }
+        }
+        return parts.join("&");
     }
 
     /**
