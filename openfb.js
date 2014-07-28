@@ -2,7 +2,10 @@ var createOpenOAuth = function (params) {
     // Use jQuery $extend would make this much easier but will make this depend on jQuery.
     var tokenKey,
         tokenStore,
-        loginUrl;
+        loginUrl,
+        // Indicates if the app is running inside Cordova
+        isRunningInCordova = !!window.cordova || !!window.phonegap;;
+
     if (params.loginUrl) {
         loginUrl = params.loginUrl;
     } else {
@@ -50,7 +53,7 @@ var createOpenOAuth = function (params) {
         }
     }
 
-    function login(isRunningInCordova, oauthCallback) {
+    function login(oauthCallback) {
         var startTime = new Date().getTime(),
             loginWindow = window.open(loginUrl, '_blank', 'location=no');
 
@@ -90,7 +93,7 @@ var createOpenOAuth = function (params) {
 
     }
 
-    function logout(logoutUrl, callback, isRunningInCordova) {
+    function logout(logoutUrl, callback) {
         if (getToken()) {
             var logoutWindow = window.open(logoutUrl, '_blank', 'location=no');
             if (isRunningInCordova) {
@@ -148,9 +151,6 @@ var createFB = function () {
         // inside the module instead of keeping it local within the login function.
         loginCallback,
 
-        // Indicates if the app is running inside Cordova
-        runningInCordova,
-
         // Used in the exit event handler to identify if the login has already been processed elsewhere (in the oauthCallback function)
         loginProcessed,
 
@@ -182,7 +182,7 @@ var createFB = function () {
         }
 
 	// phonegap is for old version support
-	runningInCordova = !!window.cordova || !!window.phonegap;
+	var runningInCordova = !!window.cordova || !!window.phonegap;
 
         if (runningInCordova) {
 	    // Login works with pretty much anything such as http://localhost
@@ -236,7 +236,7 @@ var createFB = function () {
         loginCallback = callback;
         loginProcessed = false;
 
-	openOAuth.login(runningInCordova, oauthCallback);
+	openOAuth.login(oauthCallback);
     }
 
 
@@ -274,7 +274,7 @@ var createFB = function () {
     function logout(callback) {
         var logoutUrl = FB_LOGOUT_URL + '?access_token=' + openOAuth.getToken() + '&next=' + logoutRedirectURL;
 
-	openOAuth.logout(logoutUrl, callback, runningInCordova);
+	openOAuth.logout(logoutUrl, callback);
     }
 
     /**
