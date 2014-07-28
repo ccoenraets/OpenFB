@@ -62,14 +62,13 @@ var createFB = function () {
 
 	if (params.loginScope) {
 	    loginScope = params.loginScope;
-	}
-
-        if (params.tokenStore) {
-            tokenStore = params.tokenStore;
-        } else {
+	} else {
             throw 'loginScope parameter not set in init()';
         }
 
+        if (params.tokenStore) {
+            tokenStore = params.tokenStore;
+        }
 	if (params.tokenKey) {
 	    tokenKey = params.tokenKey;
 	}
