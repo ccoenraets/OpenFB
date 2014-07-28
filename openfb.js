@@ -21,11 +21,10 @@ var createFB = function () {
 
         baseURL = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '') + context,
 
-	// Move calculate of this value into init function
+	// Moved calculate of these two values into init function
 	// Requires call init function after device ready to calculate correctly
         oauthRedirectURL = '',
-
-        logoutRedirectURL = baseURL + '/logoutcallback.html',
+        logoutRedirectURL = '',
 
         // Because the OAuth login spans multiple processes, we need to keep the login callback function as a variable
         // inside the module instead of keeping it local within the login function.
@@ -44,7 +43,6 @@ var createFB = function () {
 	// Store login url. Avoid calculate each time call login
 	loginUrl = '';
 
-    console.log(logoutRedirectURL);
 
     document.addEventListener("deviceready", function () {
         runningInCordova = true;
@@ -75,12 +73,17 @@ var createFB = function () {
         }
 
         if (runningInCordova) {
+	    // Login works with pretty much anything such as http://localhost
             oauthRedirectURL = "https://www.facebook.com/connect/login_success.html";
+	    // This is the only url I found works for logout when you do not have your own server
+            logoutRedirectURL = "https://www.facebook.com/connect/login_success.html";
         }
 	else {
             oauthRedirectURL = baseURL + '/oauthcallback.html';
+            logoutRedirectURL = baseURL + '/logoutcallback.html';
 	}
     	console.log(oauthRedirectURL);
+    	console.log(logoutRedirectURL);
 
 	loginUrl = FB_LOGIN_URL + '?client_id=' + fbAppId + '&redirect_uri=' + oauthRedirectURL +
             '&response_type=token&scope=' + loginScope;
