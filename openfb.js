@@ -22,7 +22,7 @@ var createOpenOAuth = function (params) {
         tokenStore[tokenKey] = token;
     }
 
-    function removeToken(token) {
+    function removeToken() {
         tokenStore.removeItem(tokenKey);
     }
 
@@ -39,7 +39,49 @@ var createOpenOAuth = function (params) {
         } else {
             loginStatus.status = 'unknown';
         }
-        if (callback) callback(loginStatus);
+        if (callback) {
+            callback(loginStatus);
+        }
+    }
+
+    function login(loginUrl, isRunningInCordova, oauthCallback) {
+        var startTime = new Date().getTime(),
+            loginWindow = window.open(loginUrl, '_blank', 'location=no');
+
+        // Inappbrowser load start handler: Used when running in Cordova only
+        function loginWindow_loadStartHandler(event) {
+            var url = event.url;
+            if (url.indexOf("access_token=") > 0 || url.indexOf("error=") > 0) {
+                // When we get the access token fast, the login window (inappbrowser) is still opening with animation
+                // in the Cordova app, and trying to close it while it's animating generates an exception. Wait a little...
+                var timeout = 600 - (new Date().getTime() - startTime);
+                setTimeout(function () {
+                    loginWindow.close();
+                }, timeout > 0 ? timeout : 0);
+                oauthCallback(url);
+            }
+        }
+
+        // Inappbrowser exit handler: Used when running in Cordova only
+        function loginWindow_exitHandler() {
+            console.log('exit and remove listeners');
+            // Handle the situation where the user closes the login window manually before completing the login process
+            // deferredLogin.reject({error: 'user_cancelled', error_description: 'User cancelled login process', error_reason: "user_cancelled"});
+            loginWindow.removeEventListener('loadstart', loginWindow_loadStartHandler);
+            loginWindow.removeEventListener('exit', loginWindow_exitHandler);
+            loginWindow = null;
+            console.log('done removing listeners');
+        }
+
+
+        // If the app is running in Cordova, listen to URL changes in the InAppBrowser until we get a URL with an access_token or an error
+        if (isRunningInCordova) {
+            loginWindow.addEventListener('loadstart', loginWindow_loadStartHandler);
+            loginWindow.addEventListener('exit', loginWindow_exitHandler);
+        }
+        // Note: if the app is running in the browser the loginWindow dialog will call back by invoking the
+        // oauthCallback() function. See oauthcallback.html for details.
+
     }
 
     // The public API
@@ -47,7 +89,8 @@ var createOpenOAuth = function (params) {
         getToken: getToken,
         setToken: setToken,
         removeToken: removeToken,
-        getLoginStatus: getLoginStatus
+        getLoginStatus: getLoginStatus,
+        login: login
     }
 }
 /**
@@ -163,55 +206,12 @@ var createFB = function () {
             return callback({status: 'unknown', error: 'Facebook App Id not set.'});
         }
 
-	loginGeneral(callback, loginUrl, runningInCordova);
-    }
-
-    // TODO: Move to a separate 'class' to support other services
-    function loginGeneral(callback, loginUrl, isRunningInCordova) {
-        // Inappbrowser load start handler: Used when running in Cordova only
-        function loginWindow_loadStartHandler(event) {
-            var url = event.url;
-            if (url.indexOf("access_token=") > 0 || url.indexOf("error=") > 0) {
-                // When we get the access token fast, the login window (inappbrowser) is still opening with animation
-                // in the Cordova app, and trying to close it while it's animating generates an exception. Wait a little...
-                var timeout = 600 - (new Date().getTime() - startTime);
-                setTimeout(function () {
-                    loginWindow.close();
-                }, timeout > 0 ? timeout : 0);
-                oauthCallback(url);
-            }
-        }
-
-        // Inappbrowser exit handler: Used when running in Cordova only
-        function loginWindow_exitHandler() {
-            console.log('exit and remove listeners');
-            // Handle the situation where the user closes the login window manually before completing the login process
-            deferredLogin.reject({error: 'user_cancelled', error_description: 'User cancelled login process', error_reason: "user_cancelled"});
-            loginWindow.removeEventListener('loadstop', loginWindow_loadStartHandler);
-            loginWindow.removeEventListener('exit', loginWindow_exitHandler);
-            loginWindow = null;
-            console.log('done removing listeners');
-        }
-
-
         loginCallback = callback;
         loginProcessed = false;
 
-//        logout();
-
-
-        var startTime = new Date().getTime();
-        loginWindow = window.open(loginUrl, '_blank', 'location=no');
-
-        // If the app is running in Cordova, listen to URL changes in the InAppBrowser until we get a URL with an access_token or an error
-        if (isRunningInCordova) {
-            loginWindow.addEventListener('loadstart', loginWindow_loadStartHandler);
-            loginWindow.addEventListener('exit', loginWindow_exitHandler);
-        }
-        // Note: if the app is running in the browser the loginWindow dialog will call back by invoking the
-        // oauthCallback() function. See oauthcallback.html for details.
-
+	openOAuth.login(loginUrl, runningInCordova, oauthCallback);
     }
+
 
     /**
      * Called either by oauthcallback.html (when the app is running the browser) or by the loginWindow loadstart event
