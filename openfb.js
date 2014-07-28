@@ -35,7 +35,14 @@ var createFB = function () {
         runningInCordova,
 
         // Used in the exit event handler to identify if the login has already been processed elsewhere (in the oauthCallback function)
-        loginProcessed;
+        loginProcessed,
+
+	// Store login scope instead of pass in each time login is called
+	// I do not see the need of dynamically change scope in each login call
+	loginScope,
+
+	// Store login url. Avoid calculate each time call login
+	loginUrl = '';
 
     console.log(logoutRedirectURL);
 
@@ -57,8 +64,14 @@ var createFB = function () {
             throw 'appId parameter not set in init()';
         }
 
+	if (params.loginScope) {
+	    loginScope = params.loginScope;
+	}
+
         if (params.tokenStore) {
             tokenStore = params.tokenStore;
+        } else {
+            throw 'loginScope parameter not set in init()';
         }
 
         if (runningInCordova) {
@@ -68,6 +81,10 @@ var createFB = function () {
             oauthRedirectURL = baseURL + '/oauthcallback.html';
 	}
     	console.log(oauthRedirectURL);
+
+	loginUrl = FB_LOGIN_URL + '?client_id=' + fbAppId + '&redirect_uri=' + oauthRedirectURL +
+            '&response_type=token&scope=' + loginScope;
+	console.log(loginUrl);
     }
 
     /**
@@ -96,19 +113,9 @@ var createFB = function () {
      * @returns {*}
      */
     function login(callback, options) {
-
-        var loginWindow,
-            scope = '',
-	    loginUrl = '';
-
         if (!fbAppId) {
             return callback({status: 'unknown', error: 'Facebook App Id not set.'});
         }
-        if (options && options.scope) {
-            scope = options.scope;
-        }
-	loginUrl = FB_LOGIN_URL + '?client_id=' + fbAppId + '&redirect_uri=' + oauthRedirectURL +
-            '&response_type=token&scope=' + scope;
 
 	loginGeneral(callback, loginUrl, runningInCordova);
     }
