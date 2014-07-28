@@ -2,15 +2,9 @@ var createOpenOAuth = function (params) {
     // Use jQuery $extend would make this much easier but will make this depend on jQuery.
     var tokenKey,
         tokenStore,
-        loginUrl,
         // Indicates if the app is running inside Cordova
-        isRunningInCordova = !!window.cordova || !!window.phonegap;;
+        isRunningInCordova = !!window.cordova || !!window.phonegap;
 
-    if (params.loginUrl) {
-        loginUrl = params.loginUrl;
-    } else {
-        throw 'loginUrl parameter not set';
-    }
     if (params.tokenKey) {
         tokenKey = params.tokenKey;
     } else {
@@ -53,7 +47,7 @@ var createOpenOAuth = function (params) {
         }
     }
 
-    function login(oauthCallback) {
+    function login(loginUrl, oauthCallback) {
         var startTime = new Date().getTime(),
             loginWindow = window.open(loginUrl, '_blank', 'location=no');
 
@@ -184,9 +178,8 @@ var createFB = function () {
         // Used in the exit event handler to identify if the login has already been processed elsewhere (in the oauthCallback function)
         loginProcessed,
 
-	// Store login scope instead of pass in each time login is called
-	// I do not see the need of dynamically change scope in each login call
-	loginScope,
+        // Store loginUrl calculated when init and used when login is called.
+	loginUrl,
 
         // Gradually move things here to support other services in the future
         openOAuth;
@@ -205,12 +198,6 @@ var createFB = function () {
             throw 'appId parameter not set in init()';
         }
 
-	if (params.loginScope) {
-	    loginScope = params.loginScope;
-	} else {
-            throw 'loginScope parameter not set in init()';
-        }
-
 	// phonegap is for old version support
 	var runningInCordova = !!window.cordova || !!window.phonegap;
 
@@ -227,15 +214,15 @@ var createFB = function () {
     	console.log(oauthRedirectURL);
     	console.log(logoutRedirectURL);
 
-	var loginUrl = FB_LOGIN_URL + '?client_id=' + fbAppId + '&redirect_uri=' + oauthRedirectURL +
-            '&response_type=token&scope=' + loginScope;
+	if (!params.loginScope) {
+            params['loginScope'] = 'email,user_friends';
+	}
+        loginUrl = FB_LOGIN_URL + '?client_id=' + fbAppId + '&redirect_uri=' + oauthRedirectURL +
+            '&response_type=token&scope=' + params.loginScope;
 	console.log(loginUrl);
 
 	if (!params.tokenKey) {
             params['tokenKey'] = 'fbtoken';
-        }
-        if (!params.loginUrl) {
-            params['loginUrl'] = loginUrl;
         }
         openOAuth = createOpenOAuth(params);
 
@@ -263,10 +250,19 @@ var createFB = function () {
             return callback({status: 'unknown', error: 'Facebook App Id not set.'});
         }
 
+        var loginUrlTemp;
+        // Re-calculate loginUrl if specified scope
+        if (options && options.loginScope) {
+            loginUrlTemp = FB_LOGIN_URL + '?client_id=' + fbAppId + '&redirect_uri=' + oauthRedirectURL +
+                '&response_type=token&scope=' + params.loginScope;
+        } else {
+            loginUrlTemp = loginUrl;
+        }
+
         loginCallback = callback;
         loginProcessed = false;
 
-	openOAuth.login(oauthCallback);
+	openOAuth.login(loginUrlTemp, oauthCallback);
     }
 
 
