@@ -1,0 +1,24 @@
+{
+  "name": "openfb",
+  "main": "./dist/openfb.js",
+  "version": "0.4.0",
+  "homepage": "https://github.com/ccoenraets/OpenFB",
+  "description": "A micro-library for integrating your JavaScript application with Facebook.",
+  "keywords": [
+    "facebook",
+    "cordova"
+  ],
+  "authors": [
+    "Christophe Coenraets"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "*.css",
+    "*.html",
+    "node_modules",
+    "bower_components",
+    "component.json",
+    "test"
+  ]
+}

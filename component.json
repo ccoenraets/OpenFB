@@ -1,0 +1,10 @@
+{
+  "name": "openfb",
+  "repo": "ccoenraets/OpenFB",
+  "version": "0.4.0",
+  "description": "A micro-library for integrating your JavaScript application with Facebook.",
+  "license": "MIT",
+  "main": "dist/openfb.js",
+  "keywords": ["facebook", "cordova"],
+  "scripts": ["dist/openfb.js"]
+}
