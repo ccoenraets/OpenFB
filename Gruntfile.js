@@ -13,7 +13,7 @@ module.exports = function(grunt) {
 			uglify : {
 				all : {
 					files : {
-						'dist/open-fb.min.js' : ['openfb.js']
+						'dist/openfb.min.js' : ['openfb.js']
 					}
 				}
 			},
