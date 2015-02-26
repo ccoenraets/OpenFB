@@ -274,7 +274,7 @@ var openFB = (function () {
     }
 
     // The public API
-    return {
+    var publicApi = {
         init: init,
         login: login,
         logout: logout,
@@ -283,7 +283,7 @@ var openFB = (function () {
         oauthCallback: oauthCallback,
         getLoginStatus: getLoginStatus
     };
-
+    module.exports = publicApi;
+    return publicApi;
 }());
 
-module.exports = openFB;
