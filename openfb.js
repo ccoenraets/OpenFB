@@ -285,3 +285,5 @@ var openFB = (function () {
     }
 
 }());
+
+module.exports = openFB;
