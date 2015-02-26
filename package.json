@@ -1,6 +1,6 @@
 {
   "name": "open-fb",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "repository": "jhberges/OpenFB",
   "main": "dist/openfb.min.js",
   "devDependencies": {
