@@ -1,0 +1,24 @@
+{
+  "name": "open-fb",
+  "main": "OpenFB.js",
+  "version": "0.0.1",
+  "homepage": "https://github.com/sunshineo/openfb",
+  "authors": [
+    "sunshineo",
+    "ccoenraets"
+  ],
+  "description": "Micro-library that lets you integrate browser and Cordova apps with Facebook with no plugin or SDK dependency",
+  "keywords": [
+    "cordova",
+    "facebook",
+    "openfb"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
