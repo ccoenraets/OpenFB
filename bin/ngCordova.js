@@ -1,12 +1,3 @@
-
-angular.module('ngCordova', [
-  'ngCordova.plugins'
-]);
-
-angular.module('ngCordova.plugins', [
-     'inappbrowser'
-]);
-
 //#### Begin Individual Plugin Code ####
 
 // install   :     cordova plugin add org.apache.cordova.inappbrowser

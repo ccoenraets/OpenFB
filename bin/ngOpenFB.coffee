@@ -17,10 +17,10 @@
 # There is no dependency on the Facebook SDK!
 #
 # @author Robert Wettstädt
-# @version 0.1
+# @version 0.1.1
 ###
 
-angular.module 'ngOpenFB', ['ngCordova']
+angular.module 'ngOpenFB', ['ngCordova.plugins.inAppBrowser']
 .factory '$openFB', [
     '$window'
     '$q'
@@ -342,7 +342,4 @@ angular.module 'ngOpenFB', ['ngCordova']
             parts.join '&'
 
 ]
-
-###
-# Begin of ngCordova module
-###
+###inject:ngCordova###
