@@ -251,7 +251,7 @@
           };
           if (0 < url.indexOf('access_token=')) {
             queryString = url.substr(url.indexOf('#') + 1);
-            obj = this.parseQueryString(queryString);
+            obj = parseQueryString(queryString);
             tokenStore.fbtoken = obj['access_token'];
             loginStatus = {
               status: 'connected',
@@ -316,7 +316,7 @@
           params = options.params || {};
           xhr = new XMLHttpRequest();
           params['access_token'] = tokenStore.fbtoken;
-          query = this.toQueryString(params);
+          query = toQueryString(params);
           url = "https://graph.facebook.com" + options.path + "?" + query;
           $http({
             method: options.method || 'GET',

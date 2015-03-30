@@ -246,7 +246,7 @@ angular.module 'ngOpenFB', ['ngCordova.plugins.inAppBrowser']
 
             if 0 < url.indexOf 'access_token='
                 queryString         = url.substr url.indexOf('#') + 1
-                obj                 = @parseQueryString queryString
+                obj                 = parseQueryString queryString
                 tokenStore.fbtoken  = obj['access_token']
 
                 loginStatus         =
@@ -303,7 +303,7 @@ angular.module 'ngOpenFB', ['ngCordova.plugins.inAppBrowser']
             params  = options.params or {}
             xhr     = new XMLHttpRequest()
             params['access_token'] = tokenStore.fbtoken
-            query   = @toQueryString params
+            query   = toQueryString params
 
             url     = "https://graph.facebook.com#{options.path}?#{query}"
 
