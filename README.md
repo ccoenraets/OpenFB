@@ -58,11 +58,13 @@ Checks if the user has logged in with ngOpenFB and currently has a session api t
 
 ======
 
-##### login(scope, [callback])
+##### login(options, [callback])
 Login to Facebook using OAuth. If running in a Browser, the OAuth workflow happens in a a popup window. If running in Cordova container, it happens using the In App Browser Plugin.
 
 ###### Arguments
-* scope: Required - The set of [Facebook permissions](https://developers.facebook.com/docs/facebook-login/permissions/v2.3) requested.
+* options: Required - The login options.
+  * scope: Required - The set of [Facebook permissions](https://developers.facebook.com/docs/facebook-login/permissions/v2.3) requested.
+  * location: Optional - Should the Facebook login window show the location toolbar? Default is true.
 * callback(err, result): Optional - The function to invoke when the login process finishes.
 
 ###### Returns

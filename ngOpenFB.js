@@ -117,15 +117,20 @@
          * Login to Facebook using OAuth. If running in a Browser, the OAuth workflow happens in a a popup window.
          * If running in Cordova container, it happens using the In App Browser Plugin.
         #
-         * @param scope: Required - The set of Facebook permissions requested (https://developers.facebook.com/docs/facebook-login/permissions/v2.3).
+         * @param options: Required - Login options.
+         *   scope: Required - The set of Facebook permissions requested (https://developers.facebook.com/docs/facebook-login/permissions/v2.3).
+         *   location: Optional - Should the Facebook login window show the location toolbar? Default is true.
          * @param callback(err, result): Optional - The function to invoke when the login process succeeds.
         #
          * @returns promise
          */
-        login: function(scope, callback) {
-          var exitHandler, exitListener, loadListener, loadStartHandler, loginUrl, q, startTime;
-          if ((scope == null) || typeof scope !== 'string') {
-            throw 'login(scope, [callback]) requires scope parameter. E.g. "email,user_friends". Find information on scopes here https://developers.facebook.com/docs/facebook-login/permissions/v2.3';
+        login: function(options, callback) {
+          var exitHandler, exitListener, loadListener, loadStartHandler, location, loginUrl, q, startTime;
+          if (options == null) {
+            throw 'login() requires options paramter';
+          }
+          if ((options.scope == null) || typeof options.scope !== 'string') {
+            throw 'login() options require scope parameter. E.g. "email,user_friends". Find information on scopes here https://developers.facebook.com/docs/facebook-login/permissions/v2.3';
           }
           q = $q.defer();
 
@@ -177,17 +182,21 @@
           };
           if (fbAppId != null) {
             startTime = new Date().getTime();
+            location = 'yes';
+            if (options.location != null) {
+              location = options.location ? 'yes' : 'no';
+            }
             if (runningInCordova) {
 
               /*
                * If the app is running in Cordova, listen to URL changes in the InAppBrowser
                * until we get a URL with an access_token or an error.
                */
-              loginUrl = FB_LOGIN_URL + "?client_id=" + fbAppId + "&redirect_uri=" + cordovaOauthCallback + "&response_type=token&scope=" + scope;
+              loginUrl = FB_LOGIN_URL + "?client_id=" + fbAppId + "&redirect_uri=" + cordovaOauthCallback + "&response_type=token&scope=" + options.scope;
               loadListener = $rootScope.$on('$cordovaInAppBrowser:loadstart', loadStartHandler);
               exitListener = $rootScope.$on('$cordovaInAppBrowser:exit', exitHandler);
               $cordovaInAppBrowser.open(loginUrl, '_blank', {
-                location: options.location || 'yes'
+                location: location
               });
             } else {
 
@@ -195,8 +204,8 @@
                * Else open a popup window which will - after a successful login - redirect to our callback
                * where an event on $rootscope will be broadcasted.
                */
-              loginUrl = FB_LOGIN_URL + "?client_id=" + fbAppId + "&redirect_uri=" + browserOauthCallback + "&response_type=token&scope=" + scope;
-              window.open(loginUrl, '_blank', "location=" + (options.location || 'yes'));
+              loginUrl = FB_LOGIN_URL + "?client_id=" + fbAppId + "&redirect_uri=" + browserOauthCallback + "&response_type=token&scope=" + options.scope;
+              window.open(loginUrl, '_blank', "location=" + location);
               $rootScope.$on('ngOpenFB:loadend', (function(_this) {
                 return function(event, url) {
                   return _this.oauthCallback(url, q, callback);
@@ -327,7 +336,9 @@
             }
             return q.resolve(res.data);
           }, function(err) {
-            callback(err, null);
+            if (callback) {
+              callback(err, null);
+            }
             return q.reject(err);
           });
           return q.promise;
