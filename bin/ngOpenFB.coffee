@@ -17,7 +17,7 @@
 # There is no dependency on the Facebook SDK!
 #
 # @author Robert Wettstädt
-# @version 0.1.2
+# @version 0.1.3
 ###
 
 angular.module 'ngOpenFB', ['ngCordova.plugins.inAppBrowser']
@@ -62,10 +62,10 @@ angular.module 'ngOpenFB', ['ngCordova.plugins.inAppBrowser']
         , false
 
         ###
-        # Initialize the ngOpenFB module. You must use this function and initialize the module with an appId before you can
+        # Initializes the ngOpenFB module. You must use this function and initialize the module with an appId before you can
         # use any other function.
         #
-        # @param params - init paramters
+        # @param params: Required - Init paramters.
         #   appId        : Required - The id of the Facebook app.
         #   tokenStore   : Optional - The store used to save the Facebook token. If not provided, we use sessionStorage.
         #   browserOauthCallback : Optional - The URL to the Oauth Callback for the browser.
@@ -93,7 +93,7 @@ angular.module 'ngOpenFB', ['ngCordova.plugins.inAppBrowser']
         ###
         # Checks if the user has logged in with ngOpenFB and currently has a session api token.
         #
-        # @param callback the function that receives the loginStatus.
+        # @param callback(result): Optional - The function that receives the loginStatus.
         ###
         isLoggedIn: ( callback ) ->
             q = $q.defer()
@@ -124,13 +124,15 @@ angular.module 'ngOpenFB', ['ngCordova.plugins.inAppBrowser']
         # Login to Facebook using OAuth. If running in a Browser, the OAuth workflow happens in a a popup window.
         # If running in Cordova container, it happens using the In App Browser Plugin.
         #
-        # @param options - options
-        #   scope : Required - The set of Facebook permissions requested (https://developers.facebook.com/docs/facebook-login/permissions/v2.3).
-        # @param callback the function to invoke when the login process succeeds.
+        # @param scope: Required - The set of Facebook permissions requested (https://developers.facebook.com/docs/facebook-login/permissions/v2.3).
+        # @param callback(err, result): Optional - The function to invoke when the login process succeeds.
         #
         # @returns promise
         ###
-        login: ( options, callback ) ->
+        login: ( scope, callback ) ->
+            if !scope? or typeof scope isnt 'string'
+                throw 'login(scope, [callback]) requires scope parameter. E.g. "email,user_friends". Find information on scopes here https://developers.facebook.com/docs/facebook-login/permissions/v2.3'
+
             q = $q.defer()
 
             ###
@@ -163,19 +165,19 @@ angular.module 'ngOpenFB', ['ngCordova.plugins.inAppBrowser']
                 ###
                 # Handle the situation where the user closes the login window manually before completing the login process
                 ###
-                q.reject
+                error = 
                     error: 'user_cancelled'
                     error_description: 'User cancelled login process'
                     error_reason: "user_cancelled"
+
+                callback error, null if callback
+                q.reject error
 
                 loadListener()
                 exitListener()
 
 
             if fbAppId?
-
-                if options? and options.scope?
-                    scope = options.scope
 
                 startTime   = new Date().getTime()
 
@@ -219,13 +221,28 @@ angular.module 'ngOpenFB', ['ngCordova.plugins.inAppBrowser']
 
 
         ###
-        # Called after successful login including the url of the callback.
+        # Helper function called after successful login including the url of the callback.
         #
-        # @param url - The oautchRedictURL called by Facebook with the access_token in the querystring.
-        #
+        # @param url: Required - The oautchRedictURL called by Facebook with the access_token in the querystring.
+        # @param q - Required - The promise to resolve or reject after finishing to parse oautchRedictURL.
+        # @param callback(err, result) - Required - The function to invoke when the login process finishes.
         # @returns promise
         ###
         oauthCallback: ( url, q, callback ) ->
+
+            ###
+            # Helper function
+            ###
+            parseQueryString = ( queryString ) ->
+                qs      = decodeURIComponent queryString
+                obj     = {}
+                params  = qs.split '&'
+
+                for param in params
+                    splitter            = param.split '='
+                    obj[splitter[0]]    = splitter[1]
+
+                obj
 
             if 0 < url.indexOf 'access_token='
                 queryString         = url.substr url.indexOf('#') + 1
@@ -237,7 +254,7 @@ angular.module 'ngOpenFB', ['ngCordova.plugins.inAppBrowser']
                     authResponse    :
                         token : obj['access_token']
 
-                callback loginStatus if callback
+                callback null, loginStatus if callback
                 q.resolve loginStatus
 
             else if 0 < url.indexOf 'error='
@@ -248,44 +265,56 @@ angular.module 'ngOpenFB', ['ngCordova.plugins.inAppBrowser']
                     status  : 'not_authorized'
                     error   : obj.error
 
-                callback loginStatus if callback
+                callback loginStatus, null if callback
                 q.reject loginStatus
 
             else
                 loginStatus =
                     status  : 'not_authorized'
 
-                callback loginStatus if callback
+                callback loginStatus, null if callback
                 q.reject loginStatus
 
 
         ###
         # Lets you make any Facebook Graph API request.
-        # @param obj - Request configuration object
+        # @param options: Request configuration options.
         #   path    : Required - Path in the Facebook graph: /me, /me/friends, etc.
         #   method  : Optional - HTTP method: GET, POST, etc. Default is 'GET'.
         #   params  : Optional - QueryString parameters as a map
-        #   success : Optional - Callback function when operation succeeds
-        #   error   : Optional - Callback function when operation fails
+        # @param callback(err, result): Optional - The function to invoke when the API request finishes.
         #
         # @returns promise
         ###
-        api: ( obj ) ->
+        api: ( options, callback ) ->
             q = $q.defer()
 
-            params  = obj.params or {}
+            ###
+            # Helper function
+            ###
+            toQueryString = ( params ) ->
+                parts = []
+                for param, value of params
+                    if params.hasOwnProperty param
+                        parts.push "#{encodeURIComponent(param)}=#{encodeURIComponent(value)}"
+
+                parts.join '&'
+
+            params  = options.params or {}
             xhr     = new XMLHttpRequest()
             params['access_token'] = tokenStore.fbtoken
             query   = @toQueryString params
 
-            url     = "https://graph.facebook.com#{obj.path}?#{query}"
+            url     = "https://graph.facebook.com#{options.path}?#{query}"
 
             $http
-                method  : obj.method or 'GET'
+                method  : options.method or 'GET'
                 url     : url
             .then ( res ) ->
+                callback null, res if callback
                 q.resolve res.data
             , ( err ) ->
+                callback err, null
                 q.reject err
 
             q.promise
@@ -293,53 +322,26 @@ angular.module 'ngOpenFB', ['ngCordova.plugins.inAppBrowser']
 
         ###
         # De-authorize the app
-        # @param success - Callback function when operation succeeds
-        # @param error   - Callback function when operation fails
+        # @param callback(err, result): Optional - The function to invoke when the request finishes.
         #
         # @returns promise
         ###
-        revokePermissions: ( success, error ) ->
+        revokePermissions: ( callback ) ->
             q = $q.defer()
             @api
                 method  : 'DELETE'
                 path    : '/me/permissions'
-            .then ->
+            .then ( res ) ->
                 tokenStore.fbtoken = undefined
-                success() if success
+                callback null, res if callback
                 q.resolve()
-            , ->
-                error() if error
+            , ( err ) ->
+                callback err, null if callback
                 q.reject()
 
             q.promise
 
 
-
-        ###                ###
-        #       Helper       #
-        #      Function      #
-        ###                ###
-
-
-        parseQueryString: ( queryString ) ->
-            qs      = decodeURIComponent queryString
-            obj     = {}
-            params  = qs.split '&'
-
-            for param in params
-                splitter            = param.split '='
-                obj[splitter[0]]    = splitter[1]
-
-            obj
-
-
-        toQueryString: ( params ) ->
-            parts = []
-            for param, value of params
-                if params.hasOwnProperty param
-                    parts.push "#{encodeURIComponent(param)}=#{encodeURIComponent(value)}"
-
-            parts.join '&'
 
 ]
 ###inject:ngCordova###

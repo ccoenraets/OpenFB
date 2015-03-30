@@ -18,7 +18,7 @@
  * There is no dependency on the Facebook SDK!
 #
  * @author Robert Wettstädt
- * @version 0.1
+ * @version 0.1.3
  */
 
 (function() {
@@ -53,10 +53,10 @@
       return {
 
         /*
-         * Initialize the ngOpenFB module. You must use this function and initialize the module with an appId before you can
+         * Initializes the ngOpenFB module. You must use this function and initialize the module with an appId before you can
          * use any other function.
         #
-         * @param params - init paramters
+         * @param params: Required - Init paramters.
          *   appId        : Required - The id of the Facebook app.
          *   tokenStore   : Optional - The store used to save the Facebook token. If not provided, we use sessionStorage.
          *   browserOauthCallback : Optional - The URL to the Oauth Callback for the browser.
@@ -85,7 +85,7 @@
         /*
          * Checks if the user has logged in with ngOpenFB and currently has a session api token.
         #
-         * @param callback the function that receives the loginStatus.
+         * @param callback(result): Optional - The function that receives the loginStatus.
          */
         isLoggedIn: function(callback) {
           var loginStatus, q, token;
@@ -117,14 +117,16 @@
          * Login to Facebook using OAuth. If running in a Browser, the OAuth workflow happens in a a popup window.
          * If running in Cordova container, it happens using the In App Browser Plugin.
         #
-         * @param options - options
-         *   scope : Required - The set of Facebook permissions requested (https://developers.facebook.com/docs/facebook-login/permissions/v2.3).
-         * @param callback the function to invoke when the login process succeeds.
+         * @param scope: Required - The set of Facebook permissions requested (https://developers.facebook.com/docs/facebook-login/permissions/v2.3).
+         * @param callback(err, result): Optional - The function to invoke when the login process succeeds.
         #
          * @returns promise
          */
-        login: function(options, callback) {
-          var exitHandler, exitListener, loadListener, loadStartHandler, loginUrl, q, scope, startTime;
+        login: function(scope, callback) {
+          var exitHandler, exitListener, loadListener, loadStartHandler, loginUrl, q, startTime;
+          if ((scope == null) || typeof scope !== 'string') {
+            throw 'login(scope, [callback]) requires scope parameter. E.g. "email,user_friends". Find information on scopes here https://developers.facebook.com/docs/facebook-login/permissions/v2.3';
+          }
           q = $q.defer();
 
           /*
@@ -155,23 +157,25 @@
            * Inappbrowser exit handler: Used when running in Cordova only
            */
           exitHandler = function() {
+            var error;
             console.log('exit and remove listeners');
 
             /*
              * Handle the situation where the user closes the login window manually before completing the login process
              */
-            q.reject({
+            error = {
               error: 'user_cancelled',
               error_description: 'User cancelled login process',
               error_reason: "user_cancelled"
-            });
+            };
+            if (callback) {
+              callback(error, null);
+            }
+            q.reject(error);
             loadListener();
             return exitListener();
           };
           if (fbAppId != null) {
-            if ((options != null) && (options.scope != null)) {
-              scope = options.scope;
-            }
             startTime = new Date().getTime();
             if (runningInCordova) {
 
@@ -220,14 +224,31 @@
         },
 
         /*
-         * Called after successful login including the url of the callback.
+         * Helper function called after successful login including the url of the callback.
         #
-         * @param url - The oautchRedictURL called by Facebook with the access_token in the querystring.
-        #
+         * @param url: Required - The oautchRedictURL called by Facebook with the access_token in the querystring.
+         * @param q - Required - The promise to resolve or reject after finishing to parse oautchRedictURL.
+         * @param callback(err, result) - Required - The function to invoke when the login process finishes.
          * @returns promise
          */
         oauthCallback: function(url, q, callback) {
-          var loginStatus, obj, queryString;
+
+          /*
+           * Helper function
+           */
+          var loginStatus, obj, parseQueryString, queryString;
+          parseQueryString = function(queryString) {
+            var i, len, obj, param, params, qs, splitter;
+            qs = decodeURIComponent(queryString);
+            obj = {};
+            params = qs.split('&');
+            for (i = 0, len = params.length; i < len; i++) {
+              param = params[i];
+              splitter = param.split('=');
+              obj[splitter[0]] = splitter[1];
+            }
+            return obj;
+          };
           if (0 < url.indexOf('access_token=')) {
             queryString = url.substr(url.indexOf('#') + 1);
             obj = this.parseQueryString(queryString);
@@ -239,7 +260,7 @@
               }
             };
             if (callback) {
-              callback(loginStatus);
+              callback(null, loginStatus);
             }
             return q.resolve(loginStatus);
           } else if (0 < url.indexOf('error=')) {
@@ -250,7 +271,7 @@
               error: obj.error
             };
             if (callback) {
-              callback(loginStatus);
+              callback(loginStatus, null);
             }
             return q.reject(loginStatus);
           } else {
@@ -258,7 +279,7 @@
               status: 'not_authorized'
             };
             if (callback) {
-              callback(loginStatus);
+              callback(loginStatus, null);
             }
             return q.reject(loginStatus);
           }
@@ -266,29 +287,47 @@
 
         /*
          * Lets you make any Facebook Graph API request.
-         * @param obj - Request configuration object
+         * @param options: Request configuration options.
          *   path    : Required - Path in the Facebook graph: /me, /me/friends, etc.
          *   method  : Optional - HTTP method: GET, POST, etc. Default is 'GET'.
          *   params  : Optional - QueryString parameters as a map
-         *   success : Optional - Callback function when operation succeeds
-         *   error   : Optional - Callback function when operation fails
+         * @param callback(err, result): Optional - The function to invoke when the API request finishes.
         #
          * @returns promise
          */
-        api: function(obj) {
-          var params, q, query, url, xhr;
+        api: function(options, callback) {
+          var params, q, query, toQueryString, url, xhr;
           q = $q.defer();
-          params = obj.params || {};
+
+          /*
+           * Helper function
+           */
+          toQueryString = function(params) {
+            var param, parts, value;
+            parts = [];
+            for (param in params) {
+              value = params[param];
+              if (params.hasOwnProperty(param)) {
+                parts.push((encodeURIComponent(param)) + "=" + (encodeURIComponent(value)));
+              }
+            }
+            return parts.join('&');
+          };
+          params = options.params || {};
           xhr = new XMLHttpRequest();
           params['access_token'] = tokenStore.fbtoken;
           query = this.toQueryString(params);
-          url = "https://graph.facebook.com" + obj.path + "?" + query;
+          url = "https://graph.facebook.com" + options.path + "?" + query;
           $http({
-            method: obj.method || 'GET',
+            method: options.method || 'GET',
             url: url
           }).then(function(res) {
+            if (callback) {
+              callback(null, res);
+            }
             return q.resolve(res.data);
           }, function(err) {
+            callback(err, null);
             return q.reject(err);
           });
           return q.promise;
@@ -296,57 +335,29 @@
 
         /*
          * De-authorize the app
-         * @param success - Callback function when operation succeeds
-         * @param error   - Callback function when operation fails
+         * @param callback(err, result): Optional - The function to invoke when the request finishes.
         #
          * @returns promise
          */
-        revokePermissions: function(success, error) {
+        revokePermissions: function(callback) {
           var q;
           q = $q.defer();
           this.api({
             method: 'DELETE',
             path: '/me/permissions'
-          }).then(function() {
+          }).then(function(res) {
             tokenStore.fbtoken = void 0;
-            if (success) {
-              success();
+            if (callback) {
+              callback(null, res);
             }
             return q.resolve();
-          }, function() {
-            if (error) {
-              error();
+          }, function(err) {
+            if (callback) {
+              callback(err, null);
             }
             return q.reject();
           });
           return q.promise;
-        },
-
-        /* */
-
-        /* */
-        parseQueryString: function(queryString) {
-          var i, len, obj, param, params, qs, splitter;
-          qs = decodeURIComponent(queryString);
-          obj = {};
-          params = qs.split('&');
-          for (i = 0, len = params.length; i < len; i++) {
-            param = params[i];
-            splitter = param.split('=');
-            obj[splitter[0]] = splitter[1];
-          }
-          return obj;
-        },
-        toQueryString: function(params) {
-          var param, parts, value;
-          parts = [];
-          for (param in params) {
-            value = params[param];
-            if (params.hasOwnProperty(param)) {
-              parts.push((encodeURIComponent(param)) + "=" + (encodeURIComponent(value)));
-            }
-          }
-          return parts.join('&');
         }
       };
     }

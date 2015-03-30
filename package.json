@@ -1,6 +1,6 @@
 {
   "name": "ngOpenFB",
-  "version": "0.1.",
+  "version": "0.1.3",
   "description": "ngOpenFB is an Angular module that lets you integrate your Angular or Ionic application with Facebook",
   "main": "ngOpenFB.js",
   "bin": {

@@ -4,33 +4,99 @@ ngOpenFB is an angular module that lets you integrate your JavaScript applicatio
 
 ngOpenFB works for both browser-based angular apps and ionic apps. There is no dependency on the Facebook SDK!
 
+------
 
 ### Getting Started ###
 
-* Install ngOpenFB
-```
-bower install ngOpenFB
-```
+1. Install ngOpenFB
+  ```
+  bower install ngOpenFB
+  ```
 
-* Install the [InAppBrowser plugin](https://github.com/apache/cordova-plugin-inappbrowser) by cordova 
-```bash
-cordova plugin add cordova-plugin-inappbrowser
-```
+2. Install the [InAppBrowser plugin](https://github.com/apache/cordova-plugin-inappbrowser) by cordova 
+  ```bash
+  cordova plugin add cordova-plugin-inappbrowser
+  ```
 
-* Include ngOpenFb to your angular/ionic app
-```javascript
-angular.module('<YOUR_APP>', ['ngOpenFB'])
-```
+3. Include ngOpenFb to your angular/ionic app
+  ```javascript
+  angular.module('<YOUR_APP>', ['ngOpenFB'])
+  ```
 
-* Inject the $openFB service in your module
-* Call the $openFB.init() function and set your Facebook App Id
-```javascript
-$openFB.init( {appId: '<YOUR_APP_ID>'} );
-```
+4. Inject the $openFB service in your module
+5. Call the $openFB.init() function and set your Facebook App Id
+  ```javascript
+  $openFB.init( {appId: '<YOUR_APP_ID>'} );
+  ```
 
-### Using the API ###
+6. Copy the oauthcallback.html to your project
 
-**Note:** all function calls support promises and callbacks.
+------
+
+### Function overview ###
+
+##### init(options)
+Initializes the ngOpenFB module. You must use this function and initializes the module with an appId before you can use any other function.
+
+###### Arguments
+* options: Required - Init options.
+  * appId: Required - The id of the Facebook app.
+  * tokenStore: Optional - The store used to save the Facebook token. If not provided, we use sessionStorage.
+  * browserOauthCallback: Optional - The URL to the Oauth Callback for the browser.
+  * cordovaOauthCallback: Optional - Tue URL to the Oauth Callback for the ionic app.
+
+======
+
+##### isLoggedIn([callback])
+Checks if the user has logged in with ngOpenFB and currently has a session api token.
+
+###### Arguments
+* callback(result): The function that receives the loginStatus.
+
+###### Returns
+* promise
+
+======
+
+##### login(scope, [callback])
+Login to Facebook using OAuth. If running in a Browser, the OAuth workflow happens in a a popup window. If running in Cordova container, it happens using the In App Browser Plugin.
+
+###### Arguments
+* scope: Required - The set of [Facebook permissions](https://developers.facebook.com/docs/facebook-login/permissions/v2.3) requested.
+* callback(err, result): Optional - The function to invoke when the login process finishes.
+
+###### Returns
+* promise
+
+======
+
+##### api(options, [callback])
+Lets you make any Facebook Graph API request.
+
+###### Arguments
+* options: Required - Request configuration options.
+  * path: Required - Path in the Facebook graph: /me, /me/friends, etc.
+  * method: Optional - HTTP method: GET, POST, etc. Default is 'GET'.
+  * params: Optional - QueryString parameters as a map
+* callback(err, result): Optional - The function to invoke when the API request finishes.
+
+###### Returns
+* promise
+
+======
+
+##### revokePermissions([callback])
+De-authorize the app
+
+###### Arguments
+* callback(err, result): Optional - The function to invoke when the request finishes.
+
+###### Returns
+* promise
+
+------
+
+### Examples ###
 
 Check Login status:
 ```javascript
@@ -42,6 +108,8 @@ $openFB.isLoggedIn()
 });
 ```
 
+======
+
 Login using Facebook:
 ```javascript
 $openFB.login({scope: 'email,user_friends'})
@@ -51,6 +119,8 @@ $openFB.login({scope: 'email,user_friends'})
     // error logging in
 })
 ```
+
+======
 
 Fetch user's profile and profile picture:
 ```javascript
@@ -74,6 +144,8 @@ $openFB.api({
 });
 ```
 
+======
+
 Post on the user's feed:
 ```javascript
 $openFB.api({
@@ -81,11 +153,13 @@ $openFB.api({
     path: '/me/feed',
     params: {
         message: 'Testing the Facebook Graph API'
-    },
-    success: successHandler,
-    error: errorHandler
+    }, function( err, result ) {
+        // Handle response from this callback
+    }
 });
 ```
+
+======
 
 Using a different url for your login callback:
 ```javascript
@@ -96,8 +170,7 @@ $openFB.init({
 })
 ```
 
-
-
+------
 
 ### License ###
 ngOpenFB is licensed under the MIT Open Source license. For more information, see the LICENSE file in this repository.
