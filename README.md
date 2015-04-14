@@ -65,7 +65,7 @@ Login to Facebook using OAuth. If running in a Browser, the OAuth workflow happe
 * options: Required - The login options.
   * scope: Required - The set of [Facebook permissions](https://developers.facebook.com/docs/facebook-login/permissions/v2.3) requested.
   * location: Optional - Should the Facebook login window show the location toolbar? Default is true.
-* callback(err, result): Optional - The function to invoke when the login process finishes.
+* callback(err, token): Optional - The function to invoke when the login process finishes.
 
 ###### Returns
 * promise
@@ -115,8 +115,9 @@ $openFB.isLoggedIn()
 Login using Facebook:
 ```javascript
 $openFB.login({scope: 'email,user_friends'})
-.then((function( status ) {
+.then((function( token ) {
     // log in successful
+    // send token to your server
 }, function( err ) {
     // error logging in
 })

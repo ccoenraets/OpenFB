@@ -237,7 +237,7 @@
         #
          * @param url: Required - The oautchRedictURL called by Facebook with the access_token in the querystring.
          * @param q - Required - The promise to resolve or reject after finishing to parse oautchRedictURL.
-         * @param callback(err, result) - Required - The function to invoke when the login process finishes.
+         * @param callback(err, token) - Required - The function to invoke when the login process finishes.
          * @returns promise
          */
         oauthCallback: function(url, q, callback) {
@@ -245,7 +245,7 @@
           /*
            * Helper function
            */
-          var loginStatus, obj, parseQueryString, queryString;
+          var loginStatus, obj, parseQueryString, queryString, token;
           parseQueryString = function(queryString) {
             var i, len, obj, param, params, qs, splitter;
             qs = decodeURIComponent(queryString);
@@ -261,7 +261,8 @@
           if (0 < url.indexOf('access_token=')) {
             queryString = url.substr(url.indexOf('#') + 1);
             obj = parseQueryString(queryString);
-            tokenStore.fbtoken = obj['access_token'];
+            token = obj['access_token'];
+            tokenStore.fbtoken = token;
             loginStatus = {
               status: 'connected',
               authResponse: {
@@ -269,9 +270,9 @@
               }
             };
             if (callback) {
-              callback(null, loginStatus);
+              callback(null, token);
             }
-            return q.resolve(loginStatus);
+            return q.resolve(token);
           } else if (0 < url.indexOf('error=')) {
             queryString = url.substring(url.indexOf('?') + 1, url.indexOf('#'));
             obj = parseQueryString(queryString);

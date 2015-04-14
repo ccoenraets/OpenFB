@@ -233,7 +233,7 @@ angular.module 'ngOpenFB', ['ngCordova.plugins.inAppBrowser']
         #
         # @param url: Required - The oautchRedictURL called by Facebook with the access_token in the querystring.
         # @param q - Required - The promise to resolve or reject after finishing to parse oautchRedictURL.
-        # @param callback(err, result) - Required - The function to invoke when the login process finishes.
+        # @param callback(err, token) - Required - The function to invoke when the login process finishes.
         # @returns promise
         ###
         oauthCallback: ( url, q, callback ) ->
@@ -255,15 +255,16 @@ angular.module 'ngOpenFB', ['ngCordova.plugins.inAppBrowser']
             if 0 < url.indexOf 'access_token='
                 queryString         = url.substr url.indexOf('#') + 1
                 obj                 = parseQueryString queryString
-                tokenStore.fbtoken  = obj['access_token']
+                token               = obj['access_token']
+                tokenStore.fbtoken  = token
 
                 loginStatus         =
                     status          : 'connected'
                     authResponse    :
                         token : obj['access_token']
 
-                callback null, loginStatus if callback
-                q.resolve loginStatus
+                callback null, token if callback
+                q.resolve token
 
             else if 0 < url.indexOf 'error='
                 queryString = url.substring url.indexOf('?') + 1, url.indexOf('#')
