@@ -57,7 +57,7 @@ var openFB = (function () {
         }
 
         if (params.tokenStore) {
-            tokenStore = params.tokenStore;
+            tokenStore['fbtoken'] = params.tokenStore;
         }
     }
 
