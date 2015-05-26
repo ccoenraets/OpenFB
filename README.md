@@ -97,6 +97,9 @@ The library works for both browser-based apps and Cordova/PhoneGap apps. When ru
 
 1. Delete the contents of the ```www``` directory 
 1. Copy ```index.html``` and ```openfb.js``` from the OpenFB project to the ```www``` directory of your Cordova project
+
+    > Make sure your index.html includes ```<script src="cordova.js"></script>```. cordova.js does not need to (and shouldn't be) present in your ```www``` folder: it is automatically injected by the cordova build process.
+
 1. Make sure you are in your Cordova project's root directory, add a platform, and build the project. For example: 
 
     ```
