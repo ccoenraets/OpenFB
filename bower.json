@@ -1,0 +1,26 @@
+{
+  "name": "openfb",
+  "main": "openfb.js",
+  "version": "0.5.0",
+  "homepage": "https://github.com/ccoenraets/OpenFB",
+  "authors": [
+    "Christophe Coenraets <ccoenraets@gmail.com>"
+  ],
+  "description": "Micro-Library for Facebook integration in JavaScript apps running in the browser and in Cordova",
+  "keywords": [
+    "OpenFB",
+    "Facebook",
+    "Cordova",
+    "Hybrid",
+    "Graph",
+    "OAuth"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

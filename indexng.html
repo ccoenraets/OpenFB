@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>OpenFB Sample</title>
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+    <link rel="stylesheet" href="ratchet.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body ng-app="sampleApp">
+
+<div class="content content-padded" ng-controller="MyController">
+
+<button class="btn btn-block" ng-click="login()">Login with Facebook</button>
+<hr/>
+
+<button class="btn btn-block" ng-click="getInfo()">Get My Info</button>
+<p>Name: {{user.name}}</p>
+<img ng-src="{{'http://graph.facebook.com/' + user.id + '/picture?type=small'}}"/>
+<hr/>
+
+<textarea id="Message" placeholder="What's on your mind?" rows="5"></textarea>
+<button class="btn btn-block" ng-click="share()">Share</button>
+<hr/>
+
+<p>Complete Facebook Logout. After logging out, you'll have to login again and provide your Facebook credentials.</p>
+<button class="btn btn-block" ng-click="logout()">Logout</button>
+<hr/>
+
+<button class="btn btn-block" ng-click="readPermissions()">Read Permissions</button>
+
+<p>Revoke App Permissions. After revoking permissions, you'll have to grant permissions again when logging in.</p>
+<button class="btn btn-block" ng-click="revoke()">Revoke Permissions</button>
+
+</div>
+
+<!--cordova.js is automatically injected by the Cordova build process-->
+<script src="cordova.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
+<script src="openfb.js"></script>
+<script src="ngopenfb.js"></script>
+
+<script>
+
+    angular.module('sampleApp', ["ngOpenFB"])
+
+        .controller('MyController', function ($scope, ngFB) {
+
+            // Defaults to sessionStorage for storing the Facebook token
+            ngFB.init({appId: 'YOUR_FB_APP_ID'});
+
+            //  Uncomment the line below to store the Facebook token in localStorage instead of sessionStorage
+            //  openFB.init({appId: 'YOUR_FB_APP_ID', tokenStore: window.localStorage});
+
+            $scope.login = function() {
+                ngFB.login({scope: 'email,read_stream,publish_actions'}).then(
+                    function(response) {
+                        alert('Facebook login succeeded, got access token: ' + response.authResponse.accessToken);
+                    },
+                    function(error) {
+                        alert('Facebook login failed: ' + error);
+                    });
+            }
+
+            $scope.getInfo = function() {
+                ngFB.api({path: '/me'}).then(
+                    function(user) {
+                        console.log(JSON.stringify(user));
+                        $scope.user = user;
+                    },
+                    errorHandler);
+            }
+
+            $scope.share = function() {
+                ngFB.api({
+                    method: 'POST',
+                    path: '/me/feed',
+                    params: {message: document.getElementById('Message').value || 'Testing Facebook APIs'}
+                }).then(
+                    function() {
+                        alert('the item was posted on Facebook');
+                    },
+                    errorHandler);
+            }
+
+            $scope.readPermissions = function() {
+                ngFB.api({
+                    method: 'GET',
+                    path: '/me/permissions'
+                }).then(
+                    function(result) {
+                        alert(JSON.stringify(result.data));
+                    },
+                    errorHandler
+                );
+            }
+
+            $scope.revoke = function() {
+                ngFB.revokePermissions().then(
+                    function() {
+                        alert('Permissions revoked');
+                    },
+                    errorHandler);
+            }
+
+            $scope.logout = function() {
+                ngFB.logout().then(
+                    function() {
+                        alert('Logout successful');
+                    },
+                    errorHandler);
+            }
+
+            function errorHandler(error) {
+                alert(error.message);
+            }
+
+        });
+
+</script>
+</body>
+</html>

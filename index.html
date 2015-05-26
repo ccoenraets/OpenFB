@@ -2,12 +2,14 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>openFB Sample</title>
+    <title>OpenFB Sample</title>
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
     <link rel="stylesheet" href="ratchet.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
+<div class="content content-padded">
 
 <button class="btn btn-block" onclick="login()">Login with Facebook</button>
 <hr/>
@@ -25,8 +27,12 @@
 <button class="btn btn-block" onclick="logout()">Logout</button>
 <hr/>
 
+<button class="btn btn-block" onclick="readPermissions()">Read Permissions</button>
+
 <p>Revoke App Permissions. After revoking permissions, you'll have to grant permissions again when logging in.</p>
 <button class="btn btn-block" onclick="revoke()">Revoke Permissions</button>
+
+</div>
 
 <!--cordova.js is automatically injected by the Cordova build process-->
 <script src="cordova.js"></script>
@@ -45,11 +51,11 @@
         openFB.login(
                 function(response) {
                     if(response.status === 'connected') {
-                        alert('Facebook login succeeded, got access token: ' + response.authResponse.token);
+                        alert('Facebook login succeeded, got access token: ' + response.authResponse.accessToken);
                     } else {
                         alert('Facebook login failed: ' + response.error);
                     }
-                }, {scope: 'email,read_stream,publish_stream'});
+                }, {scope: 'email,read_stream,publish_actions'});
     }
 
     function getInfo() {
@@ -74,6 +80,17 @@
                 alert('the item was posted on Facebook');
             },
             error: errorHandler});
+    }
+
+    function readPermissions() {
+        openFB.api({
+            method: 'GET',
+            path: '/me/permissions',
+            success: function(result) {
+                alert(JSON.stringify(result.data));
+            },
+            error: errorHandler
+        });
     }
 
     function revoke() {
