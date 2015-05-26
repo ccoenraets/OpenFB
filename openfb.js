@@ -58,6 +58,7 @@ var openFB = (function () {
      *  loginURL: (optional) The OAuth login URL. Defaults to https://www.facebook.com/dialog/oauth.
      *  logoutURL: (optional) The logout URL. Defaults to https://www.facebook.com/logout.php.
      *  oauthRedirectURL: (optional) The OAuth redirect URL. Defaults to [baseURL]/oauthcallback.html.
+     *  cordovaOAuthRedirectURL: (optional) The OAuth redirect URL. Defaults to https://www.facebook.com/connect/login_success.html.
      *  logoutRedirectURL: (optional) The logout redirect URL. Defaults to [baseURL]/logoutcallback.html.
      *  accessToken: (optional) An already authenticated access token.
      */
