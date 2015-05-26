@@ -10,26 +10,30 @@ Here are a few code examples...
 
 Login using Facebook:
 
-    ```
-    openFB.login(callback, {scope: 'email,read_stream,publish_actions'});
-    ```
+```
+openFB.login(callback, {scope: 'email,read_stream,publish_actions'});
+```
 
 Get the user's list of friends:
 
-    openFB.api({path: '/me/friends', success: successHandler, error: errorHandler});
+```
+openFB.api({path: '/me/friends', success: successHandler, error: errorHandler});
+```
 
 Post on the user's feed:
 
-    openFB.api(
-        {
-            method: 'POST',
-            path: '/me/feed',
-            params: {
-                message: 'Testing the Facebook Graph API'
-            },
-            success: successHandler,
-            error: errorHandler
-        });
+```
+openFB.api(
+    {
+        method: 'POST',
+        path: '/me/feed',
+        params: {
+            message: 'Testing the Facebook Graph API'
+        },
+        success: successHandler,
+        error: errorHandler
+    });
+```    
 
 The approach used in OpenFB (plain OAuth + direct requests to Graph API endpoints) is simple and lightweight, but it is definitely not perfect.
 
