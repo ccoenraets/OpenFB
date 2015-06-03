@@ -131,6 +131,7 @@ var openFB = (function () {
                 var timeout = 600 - (new Date().getTime() - startTime);
                 setTimeout(function () {
                     loginWindow.close();
+                    callback();
                 }, timeout > 0 ? timeout : 0);
                 oauthCallback(url);
             }
