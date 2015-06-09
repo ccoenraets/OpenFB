@@ -235,11 +235,13 @@ var openFB = (function () {
         var method = obj.method || 'GET',
             params = obj.params || {},
             xhr = new XMLHttpRequest(),
-            url;
+            url = 'https://graph.facebook.com';
 
         params['access_token'] = tokenStore.fbAccessToken;
 
         url = 'https://graph.facebook.com' + obj.path + '?' + toQueryString(params);
+        
+        if (obj.path.indexOf(url) >= 0 ) url = obj.path + '?' + toQueryString(params);
 
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
