@@ -33,8 +33,13 @@ openFB.api(
         success: successHandler,
         error: errorHandler
     });
-```    
+```
 
+Logout from facebook
+
+```
+  openFB.logout(successHandler,errorHandler);
+```
 The approach used in OpenFB (plain OAuth + direct requests to Graph API endpoints) is simple and lightweight, but it is definitely not perfect.
 
 Pros:
@@ -107,8 +112,8 @@ The library works for both browser-based apps and Cordova/PhoneGap apps. When ru
     cordova build ios
     ```
     
-1. Run the project on device or in the emulator    
-
+1. Run the project on device or in the emulator   
+1. You can try out [sample app](https://github.com/anantkolvankar/cordova-open-fb-sample)
 
 ## AngularJS Wrapper
 
