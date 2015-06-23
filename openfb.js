@@ -197,6 +197,11 @@ var openFB = (function () {
 			if (loginCallback) loginCallback({status:'not_authorized'});
 		}
 	}
+	
+	function getAuthResponse(callback){
+		typeof callback === 'function' && callback(authResponse);
+		return authResponse;
+	}
 
 	/**
 	 * Logout from Facebook, and remove the token.
@@ -346,6 +351,7 @@ var openFB = (function () {
 		init: init,
 		login: login,
 		logout: logout,
+		getAuthResponse: getAuthResponse,
 		revokePermissions: revokePermissions,
 		api: api,
 		oauthCallback: oauthCallback,
