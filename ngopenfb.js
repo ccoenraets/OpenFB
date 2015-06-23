@@ -68,6 +68,10 @@ angular.module('ngOpenFB', [])
             );
             return deferred.promise;
         }
+        
+        function getAuthResponse(callback) {
+            return $window.openFB.getAuthResponse(callback);
+        }
 
         return {
             init: init,
@@ -75,7 +79,8 @@ angular.module('ngOpenFB', [])
             logout: logout,
             revokePermissions: revokePermissions,
             api: api,
-            getLoginStatus: getLoginStatus
+            getLoginStatus: getLoginStatus,
+            getAuthResponse: getAuthResponse
         };
 
     });
