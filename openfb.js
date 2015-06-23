@@ -156,7 +156,7 @@ var openFB = (function () {
 
         startTime = new Date().getTime();
         loginWindow = window.open(loginURL + '?client_id=' + fbAppId + '&redirect_uri=' + redirectURL +
-            '&response_type=token&scope=' + scope, '_blank', 'location=no,clearcache=yes');
+            '&response_type=token,signed_request,code&scope=' + scope, '_blank', 'location=no,clearcache=yes');
 
         // If the app is running in Cordova, listen to URL changes in the InAppBrowser until we get a URL with an access_token or an error
         if (runningInCordova) {
@@ -180,11 +180,11 @@ var openFB = (function () {
             obj;
 
         loginProcessed = true;
-        if (url.indexOf("access_token=") > 0) {
+        if (url.indexOf('access_token=') > 0) {
             queryString = url.substr(url.indexOf('#') + 1);
             obj = parseQueryString(queryString);
             tokenStore.fbAccessToken = obj['access_token'];
-            if (loginCallback) loginCallback({status: 'connected', authResponse: {accessToken: obj['access_token']}});
+            if (loginCallback) loginCallback({status: 'connected', authResponse: {accessToken:obj['access_token'], expiresIn:obj['expires_in'], signedRequest:obj['signed_request']}});
         } else if (url.indexOf("error=") > 0) {
             queryString = url.substring(url.indexOf('?') + 1, url.indexOf('#'));
             obj = parseQueryString(queryString);
