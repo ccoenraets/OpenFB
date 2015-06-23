@@ -40,7 +40,10 @@ var openFB = (function () {
         runningInCordova,
 
     // Used in the exit event handler to identify if the login has already been processed elsewhere (in the oauthCallback function)
-        loginProcessed;
+        loginProcessed,
+    
+    // The current authResponse object if available, null otherwise
+        authResponse = null;
 
     // MAKE SURE YOU INCLUDE <script src="cordova.js"></script> IN YOUR index.html, OTHERWISE runningInCordova will always by false.
     // You don't need to (and should not) add the actual cordova.js file to your file system: it will be added automatically
@@ -95,7 +98,7 @@ var openFB = (function () {
             loginStatus = {};
         if (token) {
             loginStatus.status = 'connected';
-            loginStatus.authResponse = {accessToken: token};
+            loginStatus.authResponse = {accessToken:token};
         } else {
             loginStatus.status = 'unknown';
         }
@@ -119,13 +122,13 @@ var openFB = (function () {
             redirectURL = runningInCordova ? cordovaOAuthRedirectURL : oauthRedirectURL;
 
         if (!fbAppId) {
-            return callback({status: 'unknown', error: 'Facebook App Id not set.'});
+            return callback({ status:'unknown', error:'Facebook App Id not set.' });
         }
 
         // Inappbrowser load start handler: Used when running in Cordova only
         function loginWindow_loadStartHandler(event) {
             var url = event.url;
-            if (url.indexOf("access_token=") > 0 || url.indexOf("error=") > 0) {
+            if (url.indexOf('access_token=') > 0 || url.indexOf('error=') > 0) {
                 // When we get the access token fast, the login window (inappbrowser) is still opening with animation
                 // in the Cordova app, and trying to close it while it's animating generates an exception. Wait a little...
                 var timeout = 600 - (new Date().getTime() - startTime);
@@ -140,7 +143,7 @@ var openFB = (function () {
         function loginWindow_exitHandler() {
             console.log('exit and remove listeners');
             // Handle the situation where the user closes the login window manually before completing the login process
-            if (loginCallback && !loginProcessed) loginCallback({status: 'user_cancelled'});
+            if (loginCallback && !loginProcessed) loginCallback({status:'user_cancelled'});
             loginWindow.removeEventListener('loadstop', loginWindow_loadStopHandler);
             loginWindow.removeEventListener('exit', loginWindow_exitHandler);
             loginWindow = null;
@@ -178,19 +181,20 @@ var openFB = (function () {
         // Parse the OAuth data received from Facebook
         var queryString,
             obj;
-
+        
         loginProcessed = true;
         if (url.indexOf('access_token=') > 0) {
             queryString = url.substr(url.indexOf('#') + 1);
             obj = parseQueryString(queryString);
             tokenStore.fbAccessToken = obj['access_token'];
-            if (loginCallback) loginCallback({status: 'connected', authResponse: {accessToken:obj['access_token'], expiresIn:obj['expires_in'], signedRequest:obj['signed_request']}});
-        } else if (url.indexOf("error=") > 0) {
+            authResponse = { accessToken:obj['access_token'], expiresIn:obj['expires_in'], signedRequest:obj['signed_request'], userID:null };
+            if (loginCallback) loginCallback({ status:'connected', authResponse:authResponse });
+        } else if (url.indexOf('error=') > 0) {
             queryString = url.substring(url.indexOf('?') + 1, url.indexOf('#'));
             obj = parseQueryString(queryString);
-            if (loginCallback) loginCallback({status: 'not_authorized', error: obj.error});
+            if (loginCallback) loginCallback({status:'not_authorized', error: obj.error});
         } else {
-            if (loginCallback) loginCallback({status: 'not_authorized'});
+            if (loginCallback) loginCallback({status:'not_authorized'});
         }
     }
 
