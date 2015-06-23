@@ -98,7 +98,7 @@ var openFB = (function () {
             loginStatus = {};
         if (token) {
             loginStatus.status = 'connected';
-            loginStatus.authResponse = {accessToken:token};
+            loginStatus.authResponse = authResponse;
         } else {
             loginStatus.status = 'unknown';
         }
@@ -187,7 +187,7 @@ var openFB = (function () {
             queryString = url.substr(url.indexOf('#') + 1);
             obj = parseQueryString(queryString);
             tokenStore.fbAccessToken = obj['access_token'];
-            authResponse = { accessToken:obj['access_token'], expiresIn:obj['expires_in'], signedRequest:obj['signed_request'], userID:null };
+            authResponse = { accessToken:obj['access_token'], expiresIn:obj['expires_in'], signedRequest:obj['signed_request'], userID:decodeSignedRequest(obj['signed_request']).user_id };
             if (loginCallback) loginCallback({ status:'connected', authResponse:authResponse });
         } else if (url.indexOf('error=') > 0) {
             queryString = url.substring(url.indexOf('?') + 1, url.indexOf('#'));
@@ -295,6 +295,51 @@ var openFB = (function () {
         }
         return parts.join("&");
     }
+    
+    function base64Decode(data){
+		var b64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+		var o1, o2, o3, h1, h2, h3, h4, bits, i = 0, ac = 0, dec = '', tmp_arr = [];
+		if(!data){
+			return data;
+		}
+		data += '';
+		do{ // Unpack four hexets into three octets using index points in b64
+			h1 = b64.indexOf(data.charAt(i++));
+			h2 = b64.indexOf(data.charAt(i++));
+			h3 = b64.indexOf(data.charAt(i++));
+			h4 = b64.indexOf(data.charAt(i++));
+			bits = h1 << 18 | h2 << 12 | h3 << 6 | h4;
+			o1 = bits >> 16 & 0xff;
+			o2 = bits >> 8 & 0xff;
+			o3 = bits & 0xff;
+			if(h3 == 64){
+				tmp_arr[ac++] = String.fromCharCode(o1);
+			}else if (h4 == 64){
+				tmp_arr[ac++] = String.fromCharCode(o1, o2);
+			}else{
+				tmp_arr[ac++] = String.fromCharCode(o1, o2, o3);
+			}
+		} while(i < data.length);
+		dec = tmp_arr.join('');
+		dec = this.utf8Decode(dec);
+		return dec;
+	}
+	
+	function decodeSignedRequest(signedRequest){
+		signedRequest = signedRequest.split('.');
+		var encodedSig = signedRequest[0];
+		var payload = signedRequest[1];
+		var sig = base64Decode(encodedSig);
+		payload = base64Decode(payload);
+		// Removing null character \0 from the JSON data
+		payload = payload.replace(/\0/g, '');
+		var data = JSON.parse(payload);
+		if(data.algorithm.toUpperCase() != 'HMAC-SHA256'){
+			return 'Unknown algorithm. Expected HMAC-SHA256';
+		}
+		// TODO: Check signature!
+		return data;
+	}
 
     // The public API
     return {
