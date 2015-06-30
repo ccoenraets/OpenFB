@@ -39,17 +39,10 @@ var openFB = (function () {
 		loginCallback,
 
 	// Indicates if the app is running inside Cordova
-		runningInCordova,
+		runningInCordova = !/^(http(s)?:\/\/)/g.test(window.document.URL),
 
 	// Used in the exit event handler to identify if the login has already been processed elsewhere (in the oauthCallback function)
 		loginProcessed;
-
-	// MAKE SURE YOU INCLUDE <script src="cordova.js"></script> IN YOUR index.html, OTHERWISE runningInCordova will always by false.
-	// You don't need to (and should not) add the actual cordova.js file to your file system: it will be added automatically
-	// by the Cordova build process
-	document.addEventListener('deviceready', function () {
-		runningInCordova = true;
-	}, false);
 
 	/**
 	 * Initialize the OpenFB module. You must use this function and initialize the module with an appId before you can
