@@ -78,8 +78,8 @@ var openFB = (function () {
 		}
 
 		// keep running after application has been closed
-		if(window.localStorage.fbAuthResponse){
-			authResponse = JSON.parse(window.localStorage.fbAuthResponse);
+		if(tokenStore.fbAuthResponse){
+			authResponse = JSON.parse(tokenStore.fbAuthResponse);
 		}
 
 		loginURL = params.loginURL || loginURL;
@@ -211,8 +211,7 @@ var openFB = (function () {
 			queryString = url.substr(url.indexOf('#') + 1);
 			obj = parseQueryString(queryString);
 			authResponse = { accessToken:obj['access_token'], expiresIn:obj['expires_in'], signedRequest:obj['signed_request'], userID:decodeSignedRequest(obj['signed_request']).user_id };
-			// TODO: Guardar em cookie como `FB` e não em storage, por questões de segurança.
-			window.localStorage.fbAuthResponse = JSON.stringify(authResponse);
+			tokenStore.fbAuthResponse = JSON.stringify(authResponse);
 			if (loginCallback) loginCallback({ status:'connected', authResponse:authResponse });
 		} else if (url.indexOf('error=') > 0) {
 			queryString = url.substring(url.indexOf('?') + 1, url.indexOf('#'));
@@ -231,14 +230,16 @@ var openFB = (function () {
 	/**
 	 * Logout from Facebook, and remove the token.
 	 * IMPORTANT: For the Facebook logout to work, the logoutRedirectURL must be on the domain specified in "Site URL" in your Facebook App Settings
-	 *
+	 * e.g. https://rawgit.com/ccoenraets/OpenFB/master/logoutcallback.html
 	 */
 	function logout(callback) {
 		var logoutWindow,
 			token = authResponse ? authResponse.accessToken : null;
 
 		/* Remove token. Will fail silently if does not exist */
+		tokenStore.removeItem('fbAuthResponse');
 		tokenStore.removeItem('fbtoken');
+		authResponse = null;
 
 		if (token && !logoutProcessed) {
 			logoutProcessed = true;
@@ -287,6 +288,7 @@ var openFB = (function () {
 			url;
 
 		url = 'https://graph.facebook.com' + obj.path + '?' + toQueryString(params);
+		
 		xhr.onreadystatechange = function () {
 			if (xhr.readyState === 4) {
 				if (xhr.status === 200) {
