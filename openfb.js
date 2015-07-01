@@ -18,8 +18,9 @@ var openFB = (function () {
 	// By default we store fbtoken in sessionStorage. This can be overridden in init()
 		tokenStore = window.sessionStorage,
 
-	// The Facebook App Id. Required. Set using init().
+	// The Facebook App Id and/or Secret. Required. Set using init().
 		fbAppId,
+		fbAppSecret,
 
 		context = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/')),
 
@@ -66,6 +67,12 @@ var openFB = (function () {
 			throw 'appId parameter not set in init()';
 		}
 
+		if (params.appSecret) {
+			fbAppSecret = params.appSecret;
+		} else {
+			throw 'secretId parameter not set in init()';
+		}
+
 		if (params.tokenStore) {
 			tokenStore = params.tokenStore;
 		}
@@ -83,6 +90,21 @@ var openFB = (function () {
 	}
 
 	/**
+	 * Inspecting access tokens
+	 */
+	function debugToken(tokenToInspect, appTokenOrAdminToken, callback){
+		graph({ path:'/debug_token',
+			params: { input_token:tokenToInspect, access_token:appTokenOrAdminToken },
+			success:function(response){
+				if (callback) callback(response.data||{});
+			},
+			error:function(error){
+				if (callback) callback({});
+			}
+		});
+	}
+
+	/**
 	 * Checks if the user has logged in with openFB and currently has a session api token.
 	 * @param callback the function that receives the loginstatus
 	 */
@@ -90,12 +112,20 @@ var openFB = (function () {
 		var token = authResponse ? authResponse.accessToken : null,
 			loginStatus = {};
 		if (token) {
-			loginStatus.status = 'connected';
-			loginStatus.authResponse = authResponse;
+			debugToken(token, fbAppId+'|'+fbAppSecret, function(response){
+				if(response.is_valid) {
+					loginStatus.status = 'connected';
+					loginStatus.authResponse = authResponse;
+				} else {
+					loginStatus.status = 'unknown';
+					authResponse = null;
+				}
+				if (callback) callback(loginStatus);
+			});
 		} else {
 			loginStatus.status = 'unknown';
+			if (callback) callback(loginStatus);
 		}
-		if (callback) callback(loginStatus);
 	}
 
 	/**
@@ -236,16 +266,27 @@ var openFB = (function () {
 	 *  error:   callback function when operation fails - Optional
 	 */
 	function api(obj) {
+		obj.params = obj.params || {};
+		obj.params['access_token'] = authResponse ? authResponse.accessToken : null;
+		graph(obj);
+	}
 
+	/**
+	 * Graph API
+	 * @param obj - Request configuration object. Can include:
+	 *  method:  HTTP method: GET, POST, etc. Optional - Default is 'GET'
+	 *  path:    path in the Facebook graph: /me, /me.friends, etc. - Required
+	 *  params:  queryString parameters as a map - Optional
+	 *  success: callback function when operation succeeds - Optional
+	 *  error:   callback function when operation fails - Optional
+	 */
+	function graph(obj) {
 		var method = obj.method || 'GET',
 			params = obj.params || {},
 			xhr = new XMLHttpRequest(),
 			url;
 
-		params['access_token'] = authResponse ? authResponse.accessToken : null;
-
 		url = 'https://graph.facebook.com' + obj.path + '?' + toQueryString(params);
-
 		xhr.onreadystatechange = function () {
 			if (xhr.readyState === 4) {
 				if (xhr.status === 200) {
@@ -372,6 +413,7 @@ var openFB = (function () {
 		getAuthResponse: getAuthResponse,
 		revokePermissions: revokePermissions,
 		api: api,
+		graph: graph,
 		oauthCallback: oauthCallback,
 		getLoginStatus: getLoginStatus
 	}
