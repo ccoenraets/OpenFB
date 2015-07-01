@@ -42,7 +42,10 @@ var openFB = (function () {
 		runningInCordova = !/^(http(s)?:\/\/)/g.test(window.document.URL),
 
 	// Used in the exit event handler to identify if the login has already been processed elsewhere (in the oauthCallback function)
-		loginProcessed;
+		loginProcessed,
+
+	// Used in the exit event handler to identify if the logout has already been processed elsewhere (in the logoutCallback function)
+		logoutProcessed;
 
 	/**
 	 * Initialize the OpenFB module. You must use this function and initialize the module with an appId before you can
@@ -175,6 +178,7 @@ var openFB = (function () {
 			obj;
 		
 		loginProcessed = true;
+		logoutProcessed = false;
 		if (url.indexOf('access_token=') > 0) {
 			queryString = url.substr(url.indexOf('#') + 1);
 			obj = parseQueryString(queryString);
@@ -207,8 +211,9 @@ var openFB = (function () {
 		/* Remove token. Will fail silently if does not exist */
 		tokenStore.removeItem('fbtoken');
 
-		if (token) {
-			logoutWindow = window.open(logoutURL + '?access_token=' + token + '&next=' + logoutRedirectURL, '_blank', 'location=no,clearcache=yes');
+		if (token && !logoutProcessed) {
+			logoutProcessed = true;
+			logoutWindow = window.open(logoutURL + '?confirm=1&access_token=' + token + '&next=' + logoutRedirectURL, '_blank', 'location=no,clearcache=yes');
 			if (runningInCordova) {
 				setTimeout(function() {
 					logoutWindow.close();
