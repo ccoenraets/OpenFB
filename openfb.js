@@ -202,7 +202,7 @@ var openFB = (function () {
 	/**
 	 * Logout from Facebook, and remove the token.
 	 * IMPORTANT: For the Facebook logout to work, the logoutRedirectURL must be on the domain specified in "Site URL" in your Facebook App Settings
-	 *
+	 * e.g: https://rawgit.com/ccoenraets/OpenFB/master/logoutcallback.html
 	 */
 	function logout(callback) {
 		var logoutWindow,
