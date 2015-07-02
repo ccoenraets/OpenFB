@@ -117,7 +117,9 @@ var openFB = (function () {
 					loginStatus.status = 'connected';
 					loginStatus.authResponse = authResponse;
 				} else {
-					loginStatus.status = 'unknown';
+					loginStatus.status = 'revoked_access';
+					tokenStore.removeItem('fbAuthResponse');
+					tokenStore.removeItem('fbtoken');
 					authResponse = null;
 				}
 				if (callback) callback(loginStatus);
