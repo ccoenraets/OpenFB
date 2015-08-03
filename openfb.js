@@ -150,9 +150,14 @@ var openFB = (function () {
 			return callback({ status:'unknown', error:'Facebook App Id not set.' });
 		}
 
+		// `cordova-plugin-network-information` offline handler: Used when running in Cordova only
+		function document_offline(evt){
+			loginWindow.close();
+		}
+
 		// Inappbrowser load start handler: Used when running in Cordova only
-		function loginWindow_loadStartHandler(event) {
-			var url = event.url;
+		function loginWindow_loadStartHandler(evt) {
+			var url = evt.url;
 			if (url.indexOf('access_token=') > 0 || url.indexOf('error=') > 0) {
 				// When we get the access token fast, the login window (inappbrowser) is still opening with animation
 				// in the Cordova app, and trying to close it while it's animating generates an exception. Wait a little...
@@ -164,11 +169,18 @@ var openFB = (function () {
 			}
 		}
 
+		// Inappbrowser load stop handler fires when loading is complete: Used when running in Cordova only
+		function loginWindow_loadStopHandler(evt){
+			// N/A yet.
+		}
+
 		// Inappbrowser exit handler: Used when running in Cordova only
 		function loginWindow_exitHandler() {
 			console.log('exit and remove listeners');
 			// Handle the situation where the user closes the login window manually before completing the login process
 			if (loginCallback && !loginProcessed) loginCallback({status:'user_cancelled'});
+			document.removeEventListener('offline', document_offline);
+			loginWindow.removeEventListener('loadstart', loginWindow_loadStartHandler);
 			loginWindow.removeEventListener('loadstop', loginWindow_loadStopHandler);
 			loginWindow.removeEventListener('exit', loginWindow_exitHandler);
 			loginWindow = null;
@@ -188,7 +200,9 @@ var openFB = (function () {
 
 		// If the app is running in Cordova, listen to URL changes in the InAppBrowser until we get a URL with an access_token or an error
 		if (runningInCordova) {
+			document.addEventListener('offline', document_offline, false);
 			loginWindow.addEventListener('loadstart', loginWindow_loadStartHandler);
+			loginWindow.addEventListener('loadstop', loginWindow_loadStopHandler);
 			loginWindow.addEventListener('exit', loginWindow_exitHandler);
 		}
 		// Note: if the app is running in the browser the loginWindow dialog will call back by invoking the
