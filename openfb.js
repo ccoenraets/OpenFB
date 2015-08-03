@@ -15,6 +15,8 @@ var openFB = (function () {
 
 		authResponse = null,
 
+		disconnected = false,
+
 	// By default we store fbtoken in sessionStorage. This can be overridden in init()
 		tokenStore = window.sessionStorage,
 
@@ -152,6 +154,7 @@ var openFB = (function () {
 
 		// `cordova-plugin-network-information` offline handler: Used when running in Cordova only
 		function document_offline(evt){
+			disconnected = true;
 			loginWindow.close();
 		}
 
@@ -178,12 +181,13 @@ var openFB = (function () {
 		function loginWindow_exitHandler() {
 			console.log('exit and remove listeners');
 			// Handle the situation where the user closes the login window manually before completing the login process
-			if (loginCallback && !loginProcessed) loginCallback({status:'user_cancelled'});
+			if (loginCallback && !loginProcessed) loginCallback({status:disconnected?'user_disconnected':'user_cancelled'});
 			document.removeEventListener('offline', document_offline);
 			loginWindow.removeEventListener('loadstart', loginWindow_loadStartHandler);
 			loginWindow.removeEventListener('loadstop', loginWindow_loadStopHandler);
 			loginWindow.removeEventListener('exit', loginWindow_exitHandler);
 			loginWindow = null;
+			disconnected = false;
 			console.log('done removing listeners');
 		}
 
