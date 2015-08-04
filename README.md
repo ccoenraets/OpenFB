@@ -88,11 +88,12 @@ The library works for both browser-based apps and Cordova/PhoneGap apps. When ru
     cordova create sample com.openfb.sample sample
     ```
 
-1. Add the InAppBrowser Plugin
+1. Add the InAppBrowser Plugin and NetworkInformation
 
     ```
     cd sample
-    cordova plugins add org.apache.cordova.inappbrowser
+    cordova plugins add cordova-plugin-inappbrowser
+    cordova plugins add cordova-plugin-network-information
     ```
 
 1. Delete the contents of the ```www``` directory 
