@@ -158,6 +158,11 @@ var openFB = (function () {
 			loginWindow.close();
 		}
 
+		// `cordova-plugin-network-information` online handler: Used when running in Cordova only
+		function document_online(){
+			// N/A yet.
+		}
+
 		// Inappbrowser load start handler: Used when running in Cordova only
 		function loginWindow_loadStartHandler(evt) {
 			var url = evt.url;
@@ -187,6 +192,7 @@ var openFB = (function () {
 			console.log('exit and remove listeners');
 			// Handle the situation where the user closes the login window manually before completing the login process
 			if (loginCallback && !loginProcessed) loginCallback({status:disconnected?'user_disconnected':'user_cancelled'});
+			document.removeEventListener('online', document_online);
 			document.removeEventListener('offline', document_offline);
 			loginWindow.removeEventListener('loadstart', loginWindow_loadStartHandler);
 			loginWindow.removeEventListener('loaderror', loginWindow_loadErrorHandler);
@@ -205,11 +211,15 @@ var openFB = (function () {
 		loginProcessed = false;
 
 		startTime = new Date().getTime();
-		loginWindow = window.open(loginURL +'?client_id='+ fbAppId +'&redirect_uri='+ redirectURL +
-			'&response_type=token,signed_request,code&scope='+ scope, '_blank', 'location=no,clearcache=yes,zoom=no');
+		if(window.navigator.onLine){
+			loginWindow = window.open(loginURL +'?client_id='+ fbAppId +'&redirect_uri='+ redirectURL +'&response_type=token,signed_request,code&scope='+ scope, '_blank', 'location=no,clearcache=yes,zoom=no');
+		}else{
+			loginCallback && loginCallback({status:'user_disconnected'});
+		}
 
 		// If the app is running in Cordova, listen to URL changes in the InAppBrowser until we get a URL with an access_token or an error
-		if (runningInCordova) {
+		if(runningInCordova){
+			document.addEventListener('online', document_online, false);
 			document.addEventListener('offline', document_offline, false);
 			loginWindow.addEventListener('loadstart', loginWindow_loadStartHandler);
 			loginWindow.addEventListener('loaderror', loginWindow_loadErrorHandler);
