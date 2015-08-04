@@ -286,9 +286,9 @@ var openFB = (function () {
 			}else{
 				response = { error:true, status:'user_disconnected' };
 			}
-			if(runningInCordova){
+			if(runningInCordova && logoutWindow){
 				setTimeout(function(){
-					logoutWindow && logoutWindow.close();
+					logoutWindow.close();
 				}, 700);
 			}
 		}
