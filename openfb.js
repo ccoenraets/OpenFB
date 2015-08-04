@@ -205,8 +205,8 @@ var openFB = (function () {
 		loginProcessed = false;
 
 		startTime = new Date().getTime();
-		loginWindow = window.open(loginURL + '?client_id=' + fbAppId + '&redirect_uri=' + redirectURL +
-			'&response_type=token,signed_request,code&scope=' + scope, '_blank', 'location=no,clearcache=yes,zoom=no');
+		loginWindow = window.open(loginURL +'?client_id='+ fbAppId +'&redirect_uri='+ redirectURL +
+			'&response_type=token,signed_request,code&scope='+ scope, '_blank', 'location=no,clearcache=yes,zoom=no');
 
 		// If the app is running in Cordova, listen to URL changes in the InAppBrowser until we get a URL with an access_token or an error
 		if (runningInCordova) {
