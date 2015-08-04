@@ -153,7 +153,7 @@ var openFB = (function () {
 		}
 
 		// `cordova-plugin-network-information` offline handler: Used when running in Cordova only
-		function document_offline(evt){
+		function document_offline(){
 			disconnected = true;
 			loginWindow.close();
 		}
@@ -172,6 +172,11 @@ var openFB = (function () {
 			}
 		}
 
+		// Inappbrowser load error handler fires when occurs an error when loading a URL: Used when running in Cordova only
+		function loginWindow_loadErrorHandler(){
+			document_offline();
+		}
+
 		// Inappbrowser load stop handler fires when loading is complete: Used when running in Cordova only
 		function loginWindow_loadStopHandler(evt){
 			// N/A yet.
@@ -184,6 +189,7 @@ var openFB = (function () {
 			if (loginCallback && !loginProcessed) loginCallback({status:disconnected?'user_disconnected':'user_cancelled'});
 			document.removeEventListener('offline', document_offline);
 			loginWindow.removeEventListener('loadstart', loginWindow_loadStartHandler);
+			loginWindow.removeEventListener('loaderror', loginWindow_loadErrorHandler);
 			loginWindow.removeEventListener('loadstop', loginWindow_loadStopHandler);
 			loginWindow.removeEventListener('exit', loginWindow_exitHandler);
 			loginWindow = null;
@@ -206,6 +212,7 @@ var openFB = (function () {
 		if (runningInCordova) {
 			document.addEventListener('offline', document_offline, false);
 			loginWindow.addEventListener('loadstart', loginWindow_loadStartHandler);
+			loginWindow.addEventListener('loaderror', loginWindow_loadErrorHandler);
 			loginWindow.addEventListener('loadstop', loginWindow_loadStopHandler);
 			loginWindow.addEventListener('exit', loginWindow_exitHandler);
 		}
