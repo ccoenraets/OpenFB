@@ -211,7 +211,7 @@ var openFB = (function () {
 		loginProcessed = false;
 
 		startTime = new Date().getTime();
-		if(window.navigator.onLine){
+		if(navigator.onLine){
 			loginWindow = window.open(loginURL +'?client_id='+ fbAppId +'&redirect_uri='+ redirectURL +'&response_type=token,signed_request,code&scope='+ scope, '_blank', 'location=no,clearcache=yes,zoom=no');
 		}else{
 			loginCallback && loginCallback({status:'user_disconnected'});
@@ -270,7 +270,8 @@ var openFB = (function () {
 	 * e.g. https://rawgit.com/ccoenraets/OpenFB/master/logoutcallback.html
 	 */
 	function logout(callback) {
-		var logoutWindow,
+		var response = {},
+			logoutWindow,
 			token = authResponse ? authResponse.accessToken : null;
 
 		/* Remove token. Will fail silently if does not exist */
@@ -278,20 +279,22 @@ var openFB = (function () {
 		tokenStore.removeItem('fbtoken');
 		authResponse = null;
 
-		if (token && !logoutProcessed) {
+		if(token && !logoutProcessed){
 			logoutProcessed = true;
-			logoutWindow = window.open(logoutURL + '?confirm=1&access_token=' + token + '&next=' + logoutRedirectURL, '_blank', 'location=no,clearcache=yes,zoom=no');
-			if (runningInCordova) {
-				setTimeout(function() {
-					logoutWindow.close();
+			if(navigator.onLine){
+				logoutWindow = window.open(logoutURL +'?confirm=1&access_token='+ token +'&next='+ logoutRedirectURL, '_blank', 'location=no,clearcache=yes,zoom=no');
+			}else{
+				response = { error:true, status:'user_disconnected' };
+			}
+			if(runningInCordova){
+				setTimeout(function(){
+					logoutWindow && logoutWindow.close();
 				}, 700);
 			}
 		}
-
-		if (callback) {
-			callback();
+		if(callback){
+			callback(response);
 		}
-
 	}
 
 	/**
