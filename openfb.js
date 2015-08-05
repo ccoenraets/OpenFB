@@ -145,6 +145,7 @@ var openFB = (function () {
 
 		var loginWindow,
 			startTime,
+			timeout,
 			scope = '',
 			redirectURL = runningInCordova ? cordovaOAuthRedirectURL : oauthRedirectURL;
 
@@ -169,7 +170,7 @@ var openFB = (function () {
 			if (url.indexOf('access_token=') > 0 || url.indexOf('error=') > 0) {
 				// When we get the access token fast, the login window (inappbrowser) is still opening with animation
 				// in the Cordova app, and trying to close it while it's animating generates an exception. Wait a little...
-				var timeout = 600 - (new Date().getTime() - startTime);
+				timeout = 600 - (new Date().getTime() - startTime);
 				setTimeout(function () {
 					loginWindow.close();
 				}, timeout > 0 ? timeout : 0);
@@ -214,7 +215,10 @@ var openFB = (function () {
 		if(navigator.onLine){
 			loginWindow = window.open(loginURL +'?client_id='+ fbAppId +'&redirect_uri='+ redirectURL +'&response_type=token,signed_request,code&scope='+ scope, '_blank', 'location=no,clearcache=yes,zoom=no');
 		}else{
-			loginCallback && loginCallback({status:'user_disconnected'});
+			timeout = 600 - (new Date().getTime() - startTime);
+			setTimeout(function(){
+				loginCallback && loginCallback({status:'user_disconnected'});
+			}, timeout > 0 ? timeout : 0);
 		}
 
 		// If the app is running in Cordova, listen to URL changes in the InAppBrowser until we get a URL with an access_token or an error
