@@ -146,6 +146,7 @@ var openFB = (function () {
 		var loginWindow,
 			startTime,
 			scope = '',
+			auth_type = '',
 			redirectURL = runningInCordova ? cordovaOAuthRedirectURL : oauthRedirectURL;
 
 		if (!fbAppId) {
@@ -207,12 +208,16 @@ var openFB = (function () {
 			scope = options.scope;
 		}
 
+		if (options && options.auth_type) {
+			auth_type = '&auth_type='+ options.auth_type;
+		}
+
 		loginCallback = callback;
 		loginProcessed = false;
 
 		startTime = new Date().getTime();
 		if(navigator.onLine){
-			loginWindow = window.open(loginURL +'?client_id='+ fbAppId +'&redirect_uri='+ redirectURL +'&response_type=token,signed_request,code&scope='+ scope, '_blank', 'location=no,clearcache=yes,zoom=no');
+			loginWindow = window.open(loginURL +'?client_id='+ fbAppId +'&redirect_uri='+ redirectURL +'&response_type=token,signed_request,code&scope='+ scope + auth_type, '_blank', 'location=no,clearcache=yes,zoom=no');
 		}else{
 			loginCallback && loginCallback({status:'user_disconnected'});
 		}
