@@ -161,7 +161,7 @@ var openFB = (function () {
 
 		// `cordova-plugin-network-information` online handler: Used when running in Cordova only
 		function document_online(){
-			// N/A yet.
+			disconnected = false;
 		}
 
 		// Inappbrowser load start handler: Used when running in Cordova only
