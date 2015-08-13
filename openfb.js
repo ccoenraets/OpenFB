@@ -224,12 +224,14 @@ var openFB = (function () {
 
 		// If the app is running in Cordova, listen to URL changes in the InAppBrowser until we get a URL with an access_token or an error
 		if(runningInCordova){
-			document.addEventListener('online', document_online, false);
+			if(loginWindow){
+				loginWindow.addEventListener('loadstart', loginWindow_loadStartHandler);
+				loginWindow.addEventListener('loaderror', loginWindow_loadErrorHandler);
+				loginWindow.addEventListener('loadstop', loginWindow_loadStopHandler);
+				loginWindow.addEventListener('exit', loginWindow_exitHandler);
+			}
 			document.addEventListener('offline', document_offline, false);
-			loginWindow.addEventListener('loadstart', loginWindow_loadStartHandler);
-			loginWindow.addEventListener('loaderror', loginWindow_loadErrorHandler);
-			loginWindow.addEventListener('loadstop', loginWindow_loadStopHandler);
-			loginWindow.addEventListener('exit', loginWindow_exitHandler);
+			document.addEventListener('online', document_online, false);
 		}
 		// Note: if the app is running in the browser the loginWindow dialog will call back by invoking the
 		// oauthCallback() function. See oauthcallback.html for details.
