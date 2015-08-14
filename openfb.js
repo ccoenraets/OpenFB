@@ -280,25 +280,27 @@ var openFB = (function () {
 		var response = {},
 			logoutWindow,
 			token = authResponse ? authResponse.accessToken : null;
+		
+		if(navigator.onLine){
+			/* Remove token. Will fail silently if does not exist */
+			tokenStore.removeItem('fbAuthResponse');
+			tokenStore.removeItem('fbtoken');
+			authResponse = null;
 
-		/* Remove token. Will fail silently if does not exist */
-		tokenStore.removeItem('fbAuthResponse');
-		tokenStore.removeItem('fbtoken');
-		authResponse = null;
-
-		if(token && !logoutProcessed){
-			logoutProcessed = true;
-			if(navigator.onLine){
+			if(token && !logoutProcessed){
+				response = { error:false, status:'success' };
+				logoutProcessed = true;
 				logoutWindow = window.open(logoutURL +'?confirm=1&access_token='+ token +'&next='+ logoutRedirectURL, '_blank', 'location=no,clearcache=yes,zoom=no');
-			}else{
-				response = { error:true, status:'user_disconnected' };
+				if(runningInCordova && logoutWindow){
+					setTimeout(function(){
+						logoutWindow.close();
+					}, 700);
+				}
 			}
-			if(runningInCordova && logoutWindow){
-				setTimeout(function(){
-					logoutWindow.close();
-				}, 700);
-			}
+		}else{
+			response = { error:true, status:'user_disconnected' };
 		}
+
 		if(callback){
 			callback(response);
 		}
