@@ -156,7 +156,7 @@ var openFB = (function () {
 		// `cordova-plugin-network-information` offline handler: Used when running in Cordova only
 		function document_offline(){
 			disconnected = true;
-			loginWindow.close();
+			loginWindow && loginWindow.close();
 		}
 
 		// `cordova-plugin-network-information` online handler: Used when running in Cordova only
