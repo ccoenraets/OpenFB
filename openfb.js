@@ -305,6 +305,9 @@ var openFB = (function () {
 			callback(response);
 		}
 	}
+	function logoutCallback(url) {
+		// N/A yet
+	}
 
 	/**
 	 * Lets you make any Facebook Graph API request.
@@ -466,6 +469,7 @@ var openFB = (function () {
 		api: api,
 		graph: graph,
 		oauthCallback: oauthCallback,
+		logoutCallback: logoutCallback,
 		getLoginStatus: getLoginStatus
 	}
 }());
