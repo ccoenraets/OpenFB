@@ -181,6 +181,8 @@ var openFB = (function () {
 
 		// Inappbrowser load error handler fires when occurs an error when loading a URL: Used when running in Cordova only
 		function loginWindow_loadErrorHandler(){
+			// To avoid this error in Android, do not forget:
+			// <uses-permission android:name="android.permission.INTERNET" />
 			io_error = 'io_error';
 			document_offline();
 		}
