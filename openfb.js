@@ -222,7 +222,7 @@ var openFB = (function () {
 
 		startTime = new Date().getTime();
 		if(navigator.onLine){
-			loginWindow = window.open(loginURL +'?client_id='+ fbAppId +'&redirect_uri='+ redirectURL +'&response_type=token,signed_request,code&scope='+ scope + auth_type, '_blank', 'location=no,clearcache=yes,zoom=no');
+			loginWindow = window.open(loginURL +'?client_id='+ fbAppId +'&redirect_uri='+ redirectURL +'&response_type=token,signed_request,code&scope='+ scope + auth_type, '_blank', 'location=no,clearcache=yes,clearsessioncache=yes,zoom=no');
 		}else{
 			loginCallback && loginCallback({status:'user_disconnected'});
 		}
@@ -295,7 +295,7 @@ var openFB = (function () {
 			if(token && !logoutProcessed){
 				response = { error:false, status:'success' };
 				logoutProcessed = true;
-				logoutWindow = window.open(logoutURL +'?confirm=1&access_token='+ token +'&next='+ logoutRedirectURL, '_blank', 'location=no,clearcache=yes,zoom=no');
+				logoutWindow = window.open(logoutURL +'?confirm=1&access_token='+ token +'&next='+ logoutRedirectURL, '_blank', 'location=no,clearcache=yes,clearsessioncache=yes,zoom=no');
 				if(runningInCordova && logoutWindow){
 					setTimeout(function(){
 						logoutWindow.close();
