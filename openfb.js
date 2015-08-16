@@ -145,9 +145,9 @@ var openFB = (function () {
 
 		var loginWindow,
 			startTime,
+			io_error,
 			scope = '',
 			auth_type = '',
-			io_error = false,
 			redirectURL = runningInCordova ? cordovaOAuthRedirectURL : oauthRedirectURL;
 
 		if (!fbAppId) {
@@ -181,7 +181,7 @@ var openFB = (function () {
 
 		// Inappbrowser load error handler fires when occurs an error when loading a URL: Used when running in Cordova only
 		function loginWindow_loadErrorHandler(){
-			io_error = true;
+			io_error = 'io_error';
 			document_offline();
 		}
 
@@ -192,19 +192,17 @@ var openFB = (function () {
 
 		// Inappbrowser exit handler: Used when running in Cordova only
 		function loginWindow_exitHandler() {
-			console.log('exit and remove listeners');
 			// Handle the situation where the user closes the login window manually before completing the login process
-			if (loginCallback && !loginProcessed) loginCallback({status:disconnected?(io_error?'io_error':'user_disconnected':'user_cancelled'});
+			if (loginCallback && !loginProcessed) loginCallback({status:disconnected?(io_error||'user_disconnected'):'user_cancelled'});
 			document.removeEventListener('online', document_online);
 			document.removeEventListener('offline', document_offline);
 			loginWindow.removeEventListener('loadstart', loginWindow_loadStartHandler);
 			loginWindow.removeEventListener('loaderror', loginWindow_loadErrorHandler);
 			loginWindow.removeEventListener('loadstop', loginWindow_loadStopHandler);
 			loginWindow.removeEventListener('exit', loginWindow_exitHandler);
-			loginWindow = undefined;
 			disconnected = false;
-			io_error = false;
-			console.log('done removing listeners');
+			loginWindow = undefined;
+			io_error = undefined;
 		}
 
 		if (options && options.scope) {
