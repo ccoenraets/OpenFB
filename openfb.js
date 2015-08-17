@@ -189,9 +189,9 @@ var openFB = (function () {
 
 		// Inappbrowser load stop handler fires when loading is complete: Used when running in Cordova only
 		function loginWindow_loadStopHandler(evt){
-			tokenStore.removeItem('fbAuthResponse');
-			tokenStore.removeItem('fbtoken');
-			authResponse = null;
+			// tokenStore.removeItem('fbAuthResponse');
+			// tokenStore.removeItem('fbtoken');
+			// authResponse = null;
 		}
 
 		// Inappbrowser exit handler: Used when running in Cordova only
