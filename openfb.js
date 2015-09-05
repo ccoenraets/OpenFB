@@ -296,11 +296,10 @@ var openFB = (function () {
 				response = { error:false, status:'success' };
 				logoutProcessed = true;
 				logoutWindow = window.open(logoutURL +'?confirm=1&access_token='+ token +'&next='+ logoutRedirectURL, '_blank', 'location=no,clearcache=yes,clearsessioncache=yes,zoom=no');
-				if(runningInCordova && logoutWindow){
-					setTimeout(function(){
-						logoutWindow.close();
-					}, 700);
-				}
+				setTimeout(function(){
+					logoutWindow && logoutWindow.close();
+					logoutWindow = undefined;
+				}, 700);
 			}
 		}else{
 			response = { error:true, status:'user_disconnected' };
