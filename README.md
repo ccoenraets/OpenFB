@@ -12,7 +12,7 @@ Init:
 
 ```
 openFB.init({
-  oauthRedirectURL:'https://cdn.rawgit.com/adriancmiranda/OpenFB/master/oauthcallback.html',
+  oauthRedirectURL:'https://cdn.rawgit.com/ccoenraets/OpenFB/master/oauthcallback.html',
   appSecret:facebook.appSecret,
   appId:facebook.appId
 });
@@ -45,10 +45,10 @@ openFB.api(
     });
 ```    
 
-You can use [this](https://cdn.rawgit.com/adriancmiranda/OpenFB/master/oauthcallback.html) Facebook `Valid OAuth redirect URI` for development:
+You can use [this](https://cdn.rawgit.com/ccoenraets/OpenFB/master/oauthcallback.html) Facebook `Valid OAuth redirect URI` for development:
 
 ```
-https://cdn.rawgit.com/adriancmiranda/OpenFB/master/oauthcallback.html
+https://cdn.rawgit.com/ccoenraets/OpenFB/master/oauthcallback.html
 ```
 
 The approach used in OpenFB (plain OAuth + direct requests to Graph API endpoints) is simple and lightweight, but it is definitely not perfect.
