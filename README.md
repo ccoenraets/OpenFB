@@ -8,6 +8,16 @@ OpenFB allows you to login to Facebook and execute any Facebook Graph API reques
 
 Here are a few code examples...
 
+Init:
+
+```
+openFB.init({
+  oauthRedirectURL:'https://cdn.rawgit.com/ccoenraets/OpenFB/master/oauthcallback.html',
+  appSecret:facebook.appSecret,
+  appId:facebook.appId
+});
+```
+
 Login using Facebook:
 
 ```
@@ -34,6 +44,12 @@ openFB.api(
         error: errorHandler
     });
 ```    
+
+You can use [this](https://cdn.rawgit.com/ccoenraets/OpenFB/master/oauthcallback.html) Facebook `Valid OAuth redirect URI` for development:
+
+```
+https://cdn.rawgit.com/ccoenraets/OpenFB/master/oauthcallback.html
+```
 
 The approach used in OpenFB (plain OAuth + direct requests to Graph API endpoints) is simple and lightweight, but it is definitely not perfect.
 
@@ -88,11 +104,12 @@ The library works for both browser-based apps and Cordova/PhoneGap apps. When ru
     cordova create sample com.openfb.sample sample
     ```
 
-1. Add the InAppBrowser Plugin
+1. Add the InAppBrowser Plugin and NetworkInformation
 
     ```
     cd sample
-    cordova plugins add org.apache.cordova.inappbrowser
+    cordova plugins add cordova-plugin-inappbrowser
+    cordova plugins add cordova-plugin-network-information
     ```
 
 1. Delete the contents of the ```www``` directory 

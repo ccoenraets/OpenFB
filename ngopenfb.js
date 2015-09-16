@@ -45,6 +45,18 @@ angular.module('ngOpenFB', [])
             $window.openFB.api(obj);
             return deferred.promise;
         }
+        
+        function graph(obj) {
+            var deferred = $q.defer();
+            obj.success = function(result) {
+                deferred.resolve(result);
+            };
+            obj.error = function(error) {
+                deferred.reject(error);
+            };
+            $window.openFB.graph(obj);
+            return deferred.promise;
+        }
 
         function revokePermissions() {
             var deferred = $q.defer();
@@ -68,6 +80,10 @@ angular.module('ngOpenFB', [])
             );
             return deferred.promise;
         }
+        
+        function getAuthResponse(callback) {
+            return $window.openFB.getAuthResponse(callback);
+        }
 
         return {
             init: init,
@@ -75,7 +91,9 @@ angular.module('ngOpenFB', [])
             logout: logout,
             revokePermissions: revokePermissions,
             api: api,
-            getLoginStatus: getLoginStatus
+            graph: graph,
+            getLoginStatus: getLoginStatus,
+            getAuthResponse: getAuthResponse
         };
 
     });
