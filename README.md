@@ -8,6 +8,16 @@ OpenFB allows you to login to Facebook and execute any Facebook Graph API reques
 
 Here are a few code examples...
 
+Init:
+
+```
+openFB.init({
+	oauthRedirectURL:'https://cdn.rawgit.com/adriancmiranda/OpenFB/master/oauthcallback.html',
+	appSecret:facebook.appSecret,
+	appId:facebook.appId
+});
+```
+
 Login using Facebook:
 
 ```
