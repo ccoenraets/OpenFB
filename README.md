@@ -12,9 +12,9 @@ Init:
 
 ```
 openFB.init({
-	oauthRedirectURL:'https://cdn.rawgit.com/adriancmiranda/OpenFB/master/oauthcallback.html',
-	appSecret:facebook.appSecret,
-	appId:facebook.appId
+  oauthRedirectURL:'https://cdn.rawgit.com/adriancmiranda/OpenFB/master/oauthcallback.html',
+  appSecret:facebook.appSecret,
+  appId:facebook.appId
 });
 ```
 
