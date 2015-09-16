@@ -35,7 +35,8 @@ openFB.api(
     });
 ```    
 
-Facebook `Valid OAuth redirect URIs` for development:
+You can use [this](https://rawgit.com/adriancmiranda/OpenFB/master/oauthcallback.html) Facebook `Valid OAuth redirect URI` for development:
+
 ```
 https://rawgit.com/adriancmiranda/OpenFB/master/oauthcallback.html
 ```
