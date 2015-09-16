@@ -35,6 +35,11 @@ openFB.api(
     });
 ```    
 
+Facebook `Valid OAuth redirect URIs` for development:
+```
+https://rawgit.com/adriancmiranda/OpenFB/master/oauthcallback.html
+```
+
 The approach used in OpenFB (plain OAuth + direct requests to Graph API endpoints) is simple and lightweight, but it is definitely not perfect.
 
 Pros:
