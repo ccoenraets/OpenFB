@@ -135,6 +135,11 @@ var openFB = (function () {
                 oauthCallback(url);
             }
         }
+     function loginWindow_loadStopHandler(event) {
+                var url = event.url;
+                console.log('loginWindow_loadStopHandler :: ' + url);
+            }
+
 
         // Inappbrowser exit handler: Used when running in Cordova only
         function loginWindow_exitHandler() {
@@ -162,6 +167,8 @@ var openFB = (function () {
         if (runningInCordova) {
             loginWindow.addEventListener('loadstart', loginWindow_loadStartHandler);
             loginWindow.addEventListener('exit', loginWindow_exitHandler);
+
+            loginWindow.addEventListener('loadstop', loginWindow_loadStopHandler);
         }
         // Note: if the app is running in the browser the loginWindow dialog will call back by invoking the
         // oauthCallback() function. See oauthcallback.html for details.
