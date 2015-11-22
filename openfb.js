@@ -141,7 +141,10 @@ var openFB = (function () {
             console.log('exit and remove listeners');
             // Handle the situation where the user closes the login window manually before completing the login process
             if (loginCallback && !loginProcessed) loginCallback({status: 'user_cancelled'});
-            loginWindow.removeEventListener('loadstop', loginWindow_loadStopHandler);
+            // When the user filling the facebook code generator it called the stophandler, and it was undefined
+            if (loginWindow_loadStopHandler) {
+                loginWindow.removeEventListener('loadstop', loginWindow_loadStopHandler);
+            }
             loginWindow.removeEventListener('exit', loginWindow_exitHandler);
             loginWindow = null;
             console.log('done removing listeners');
