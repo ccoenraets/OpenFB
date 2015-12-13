@@ -8,7 +8,7 @@
  */
 angular.module('ngOpenFB', [])
 
-    .factory('ngFB', function ($q, $window) {
+    .factory('ngFB', ['$q', '$window', function ($q, $window) {
 
         function init(params) {
             return $window.openFB.init(params);
@@ -78,4 +78,4 @@ angular.module('ngOpenFB', [])
             getLoginStatus: getLoginStatus
         };
 
-    });
+    }]);
