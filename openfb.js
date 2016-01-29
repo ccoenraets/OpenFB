@@ -122,8 +122,9 @@ var openFB = (function () {
             return callback({status: 'unknown', error: 'Facebook App Id not set.'});
         }
 
-        // Inappbrowser load start handler: Used when running in Cordova only
-        function loginWindow_loadStartHandler(event) {
+        // Inappbrowser load stop handler: Used when running in Cordova only
+        //note:load start is not called in new cordova versions, it seems
+        function loginWindow_loadStopHandler(event) {
             var url = event.url;
             if (url.indexOf("access_token=") > 0 || url.indexOf("error=") > 0) {
                 // When we get the access token fast, the login window (inappbrowser) is still opening with animation
@@ -160,7 +161,7 @@ var openFB = (function () {
 
         // If the app is running in Cordova, listen to URL changes in the InAppBrowser until we get a URL with an access_token or an error
         if (runningInCordova) {
-            loginWindow.addEventListener('loadstart', loginWindow_loadStartHandler);
+            loginWindow.addEventListener('loadstop', loginWindow_loadStopHandler);
             loginWindow.addEventListener('exit', loginWindow_exitHandler);
         }
         // Note: if the app is running in the browser the loginWindow dialog will call back by invoking the
@@ -204,8 +205,7 @@ var openFB = (function () {
             token = tokenStore.fbAccessToken;
 
         /* Remove token. Will fail silently if does not exist */
-        tokenStore.removeItem('fbtoken');
-
+        tokenStore.removeItem('fbAccessToken');
         if (token) {
             logoutWindow = window.open(logoutURL + '?access_token=' + token + '&next=' + logoutRedirectURL, '_blank', 'location=no,clearcache=yes');
             if (runningInCordova) {
