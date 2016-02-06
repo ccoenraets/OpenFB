@@ -1,8 +1,10 @@
 <html>
 <body>
 <script>
+try{ //in case we call outside cordova browser platform
     window.opener.openFB.oauthCallback(window.location.href);
     window.close();
+    }catch(e){ console.log(e.description); }
 </script>
 </body>
 </html>
