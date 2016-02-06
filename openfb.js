@@ -38,7 +38,8 @@ var openFB = (function () {
 
     // Indicates if the app is running inside Cordova
         runningInCordova = false,
-
+        
+        
     // Indicates if the app is runniong on browser platform     
         runningCordovaBrowser = false,
 
@@ -147,12 +148,32 @@ var openFB = (function () {
             }
         }
 
+        // Inappbrowser load start handler: Used when running in Cordova only
+        function loginWindow_loadStartHandler(event) {
+            var url = event.url;
+            if (url.indexOf("access_token=") > 0 || url.indexOf("error=") > 0) {
+                // When we get the access token fast, the login window (inappbrowser) is still opening with animation
+                // in the Cordova app, and trying to close it while it's animating generates an exception. Wait a little...
+                var timeout = 600 - (new Date().getTime() - startTime);
+                setTimeout(function () {
+                    loginWindow.close();
+                }, timeout > 0 ? timeout : 0);
+                oauthCallback(url);
+            }
+        }
+
+
         // Inappbrowser exit handler: Used when running in Cordova only
         function loginWindow_exitHandler() {
             console.log('exit and remove listeners');
             // Handle the situation where the user closes the login window manually before completing the login process
             if (loginCallback && !loginProcessed) loginCallback({status: 'user_cancelled'});
-            loginWindow.removeEventListener('loadstop', loginWindow_loadStopHandler);
+            
+            if (runningCordovaBrowser==true) 
+                  loginWindow.removeEventListener('loadstop', loginWindow_loadStopHandler);
+                 else
+                  loginWindow.removeEventListener('loadstart', loginWindow_loadStartHandler);
+                
             loginWindow.removeEventListener('exit', loginWindow_exitHandler);
             loginWindow = null;
             console.log('done removing listeners');
@@ -177,7 +198,11 @@ var openFB = (function () {
 
         // If the app is running in Cordova, listen to URL changes in the InAppBrowser until we get a URL with an access_token or an error
         if (runningInCordova) {
-            loginWindow.addEventListener('loadstop', loginWindow_loadStopHandler);
+           if (runningCordovaBrowser==true) 
+                loginWindow.addEventListener('loadstop', loginWindow_loadStopHandler);
+               else
+                loginWindow.addEventListener('loadstart', loginWindow_loadStartHandler);
+                
             loginWindow.addEventListener('exit', loginWindow_exitHandler);
         }
         // Note: if the app is running in the browser the loginWindow dialog will call back by invoking the
