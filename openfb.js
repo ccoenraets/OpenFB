@@ -10,7 +10,7 @@
 var openFB = (function () {
 
     var loginURL = 'https://www.facebook.com/dialog/oauth',
-
+        dialogAppRequestURL = 'https://www.facebook.com/dialog/apprequests',
         logoutURL = 'https://www.facebook.com/logout.php',
 
     // By default we store fbtoken in sessionStorage. This can be overridden in init()
@@ -35,13 +35,17 @@ var openFB = (function () {
     // Because the OAuth login spans multiple processes, we need to keep the login callback function as a variable
     // inside the module instead of keeping it local within the login function.
         loginCallback,
+    // Because the dialog spans multiple processes, we need to keep the dialog callback function as a variable
+    // inside the module instead of keeping it local within the dialog function.
+        dialogCallback,
 
     // Indicates if the app is running inside Cordova
         runningInCordova,
 
     // Used in the exit event handler to identify if the login has already been processed elsewhere (in the oauthCallback function)
-        loginProcessed;
-
+        loginProcessed,
+    // Used in the exit event handler to identify if the dialog has already been processed elsewhere (in the dialogCallback function)
+        dialogProcessed;
     // MAKE SURE YOU INCLUDE <script src="cordova.js"></script> IN YOUR index.html, OTHERWISE runningInCordova will always by false.
     // You don't need to (and should not) add the actual cordova.js file to your file system: it will be added automatically
     // by the Cordova build process
@@ -122,8 +126,9 @@ var openFB = (function () {
             return callback({status: 'unknown', error: 'Facebook App Id not set.'});
         }
 
-        // Inappbrowser load start handler: Used when running in Cordova only
-        function loginWindow_loadStartHandler(event) {
+        // Inappbrowser load stop handler: Used when running in Cordova only
+        //note:load start is not called in new cordova versions, it seems
+        function loginWindow_loadStopHandler(event) {
             var url = event.url;
             if (url.indexOf("access_token=") > 0 || url.indexOf("error=") > 0) {
                 // When we get the access token fast, the login window (inappbrowser) is still opening with animation
@@ -160,13 +165,14 @@ var openFB = (function () {
 
         // If the app is running in Cordova, listen to URL changes in the InAppBrowser until we get a URL with an access_token or an error
         if (runningInCordova) {
-            loginWindow.addEventListener('loadstart', loginWindow_loadStartHandler);
+            loginWindow.addEventListener('loadstop', loginWindow_loadStopHandler);
             loginWindow.addEventListener('exit', loginWindow_exitHandler);
         }
         // Note: if the app is running in the browser the loginWindow dialog will call back by invoking the
         // oauthCallback() function. See oauthcallback.html for details.
 
     }
+
 
     /**
      * Called either by oauthcallback.html (when the app is running the browser) or by the loginWindow loadstart event
@@ -204,8 +210,7 @@ var openFB = (function () {
             token = tokenStore.fbAccessToken;
 
         /* Remove token. Will fail silently if does not exist */
-        tokenStore.removeItem('fbtoken');
-
+        tokenStore.removeItem('fbAccessToken');
         if (token) {
             logoutWindow = window.open(logoutURL + '?access_token=' + token + '&next=' + logoutRedirectURL, '_blank', 'location=no,clearcache=yes');
             if (runningInCordova) {
@@ -220,6 +225,74 @@ var openFB = (function () {
         }
 
     }
+
+
+    /**
+     * Show Dialog AppRequest. If running in a Browser, the workflow happens in a a popup window.
+     * If running in Cordova container, it happens using the In-App Browser. Don't forget to install the In-App Browser
+     * plugin in your Cordova project: cordova plugins add org.apache.cordova.inappbrowser.
+     *
+     * @param callback - Callback function to invoke when the login process succeeds
+     * @param options - options.scope: The set of Facebook permissions requested
+     * @returns {*}
+     */
+    function dialogAppRequest(message,callback) {
+
+        var dialogWindow,
+            startTime,
+            scope = '',
+            redirectURL = runningInCordova ? cordovaOAuthRedirectURL : oauthRedirectURL;
+
+        if (!fbAppId) {
+            if (callback) callback({ status: 'unknown', error: 'Facebook App Id not set.' });
+            return;
+        }
+
+        // Inappbrowser load stop handler: Used when running in Cordova only
+        //note:load start is not called in new cordova versions, it seems
+        function dialogWindow_loadStopHandler(event) {
+            var url = event.url;
+            if (url.indexOf(redirectURL) != -1 ) {
+                // When we get the access token fast, the login window (inappbrowser) is still opening with animation
+                // in the Cordova app, and trying to close it while it's animating generates an exception. Wait a little...
+                var timeout = 600 - (new Date().getTime() - startTime);
+                setTimeout(function () {
+                    dialogWindow.close();
+                }, timeout > 0 ? timeout : 0);
+                //todo: do something? like oauthCallback(url) does with login;
+                dialogProcessed = true;
+                if (callback)  callback(url);
+            }
+        }
+
+        // Inappbrowser exit handler: Used when running in Cordova only
+        function dialogWindow_exitHandler() {
+            console.log('exit and remove listeners');
+            // Handle the situation where the user closes the login window manually before completing the login process
+            if (dialogCallback && !dialogProcessed) dialogCallback({ status: 'user_cancelled' });
+            dialogWindow.removeEventListener('loadstop', dialogWindow_loadStopHandler);
+            dialogWindow.removeEventListener('exit', dialogWindow_exitHandler);
+            dialogWindow = null;
+            console.log('done removing listeners');
+        }
+
+        dialogCallback = callback;
+        dialogProcessed = false;
+
+        startTime = new Date().getTime();
+        dialogWindow = window.open(dialogAppRequestURL + '?app_id=' + fbAppId + '&redirect_uri=' + redirectURL 
+            + '&message=' + message, '_blank', 'location=no,clearcache=yes');
+
+        // If the app is running in Cordova, listen to URL changes in the InAppBrowser until we get a URL with an access_token or an error
+        if (runningInCordova) {
+            dialogWindow.addEventListener('loadstop', dialogWindow_loadStopHandler);
+            dialogWindow.addEventListener('exit', dialogWindow_exitHandler);
+        }
+        // Note: if the app is running in the browser the dialogWindow dialog will call back by invoking the
+        // oauthCallback() function. See oauthcallback.html for details.
+
+    }
+
 
     /**
      * Lets you make any Facebook Graph API request.
@@ -300,7 +373,8 @@ var openFB = (function () {
         revokePermissions: revokePermissions,
         api: api,
         oauthCallback: oauthCallback,
-        getLoginStatus: getLoginStatus
+        getLoginStatus: getLoginStatus,
+        dialogAppRequest: dialogAppRequest
     }
 
 }());
