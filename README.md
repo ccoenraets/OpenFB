@@ -57,19 +57,17 @@ The library works for both browser-based apps and Cordova/PhoneGap apps. When ru
 
 1. Access [https://developers.facebook.com/apps](https://developers.facebook.com/apps), and click **Add New App**
 
-1. Select **www** as the platform
-
 1. Type a unique name for your app and click **Create New Facebook App ID** 
 
 1. Specify a **Category**, and click **Create App ID**
 
-1. Click **My Apps** in the menu and select the app you just created 
+1. Click **Get Started** next to facebook login in product setup.
 
-1. Click **Settings** in the left navigation
+1. Click **Facebook login** in the left navigation
 
 1. Click the **Advanced Tab**
 
-1. In the **OAuth Settings** section, add the following URLs in the **Valid OAuth redirect URIs** field:
+1. In the **Client OAuth Settings** section, add the following URLs in the **Valid OAuth redirect URI's** field:
     - [http://localhost:8100/oauthcallback.html](http://localhost:8100/oauthcallback.html) (for access using ionic serve)
     - [https://www.facebook.com/connect/login_success.html](https://www.facebook.com/connect/login_success.html) (for access from Cordova)
 
