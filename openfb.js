@@ -109,14 +109,18 @@ var openFB = (function () {
      *
      * @param callback - Callback function to invoke when the login process succeeds
      * @param options - options.scope: The set of Facebook permissions requested
+     * @param inAppBrowserOptions - Provides an ability to control inAppBrowser options
      * @returns {*}
      */
-    function login(callback, options) {
+    function login(callback, options, inAppBrowserOptions) {
 
         var loginWindow,
             startTime,
             scope = '',
             redirectURL = runningInCordova ? cordovaOAuthRedirectURL : oauthRedirectURL;
+
+
+        inAppBrowserOptions = inAppBrowserOptions ||'location=no,clearcache=yes,mediaPlaybackRequiresUserAction=no,allowInlineMediaPlayback=yes';
 
         if (!fbAppId) {
             return callback({status: 'unknown', error: 'Facebook App Id not set.'});
@@ -156,7 +160,7 @@ var openFB = (function () {
 
         startTime = new Date().getTime();
         loginWindow = window.open(loginURL + '?client_id=' + fbAppId + '&redirect_uri=' + redirectURL +
-            '&response_type=token&scope=' + scope, '_blank', 'location=no,clearcache=yes');
+            '&response_type=token&scope=' + scope, '_blank', inAppBrowserOptions);
 
         // If the app is running in Cordova, listen to URL changes in the InAppBrowser until we get a URL with an access_token or an error
         if (runningInCordova) {
@@ -199,15 +203,17 @@ var openFB = (function () {
      * IMPORTANT: For the Facebook logout to work, the logoutRedirectURL must be on the domain specified in "Site URL" in your Facebook App Settings
      *
      */
-    function logout(callback) {
+    function logout(callback, inAppBrowserOptions) {
         var logoutWindow,
             token = tokenStore.fbAccessToken;
+
+        inAppBrowserOptions = inAppBrowserOptions || 'location=no,clearcache=yes,mediaPlaybackRequiresUserAction=no,allowInlineMediaPlayback=yes';
 
         /* Remove token. Will fail silently if does not exist */
         tokenStore.removeItem('fbtoken');
 
         if (token) {
-            logoutWindow = window.open(logoutURL + '?access_token=' + token + '&next=' + logoutRedirectURL, '_blank', 'location=no,clearcache=yes');
+            logoutWindow = window.open(logoutURL + '?access_token=' + token + '&next=' + logoutRedirectURL, '_blank', inAppBrowserOptions);
             if (runningInCordova) {
                 setTimeout(function() {
                     logoutWindow.close();
